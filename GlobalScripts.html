@@ -1,0 +1,252 @@
+<script>
+
+// ===================================================================
+// FILE: GlobalScripts.html (THE SPA CORE & UTILITIES)
+// DESCRIPTION: Global utility functions used across all roles.
+//              Handles loading animations, custom alert modals,
+//              the universal diff checker, and shared frontend helpers.
+// NEW IN THIS VERSION:
+//   - setBtnLoading()    — eliminates 30+ repeated save-button patterns
+//   - readFileAsBase64() — eliminates 12+ repeated FileReader patterns
+//   - makeBadge()        — centralizes 15+ repeated badge HTML strings
+//   - globalError()      — standard failure handler (add to all calls)
+//   - globalRefresh():   fixed localStorage key bug (lastAdvPage →
+//                         lastAdviserPage, default 'home' not 'dashboard')
+// ===================================================================
+
+// -------------------------------------------------------------------
+// MODULE: Global Loader Engine
+// -------------------------------------------------------------------
+let globalLoaderTimeout;
+let currentRefreshIcon = null;
+let currentActivePage  = null;
+
+function showLoader(msg = "Processing...") {
+  document.getElementById('loader-text').innerText = msg;
+  document.getElementById('global-loader').classList.remove('hidden');
+  clearTimeout(globalLoaderTimeout);
+  globalLoaderTimeout = setTimeout(() => hideLoader(), 30000);
+}
+
+function hideLoader() {
+  document.getElementById('global-loader').classList.add('hidden');
+  clearTimeout(globalLoaderTimeout);
+}
+
+// -------------------------------------------------------------------
+// MODULE: Custom Alert & Confirm Engine
+// -------------------------------------------------------------------
+
+function customAlert(message, title = "System Message", icon = "info") {
+  document.getElementById('ca-title').innerText   = title;
+  document.getElementById('ca-message').innerHTML = message;
+  document.getElementById('ca-icon').innerText    = icon;
+  document.getElementById('ca-cancel-btn').style.display = 'none';
+
+  document.getElementById('ca-ok-btn').onclick = () => {
+    document.getElementById('custom-alert-overlay').classList.add('hidden');
+  };
+  document.getElementById('custom-alert-overlay').classList.remove('hidden');
+}
+
+// Overrides the native browser alert everywhere in the app
+window.alert = function(msg) { customAlert(msg); };
+
+function customConfirm(message, title = "Please Confirm", icon = "help_outline") {
+  return new Promise((resolve) => {
+    document.getElementById('ca-title').innerText   = title;
+    document.getElementById('ca-message').innerHTML = message;
+    document.getElementById('ca-icon').innerText    = icon;
+    document.getElementById('ca-cancel-btn').style.display = 'inline-block';
+
+    const okBtn     = document.getElementById('ca-ok-btn');
+    const cancelBtn = document.getElementById('ca-cancel-btn');
+
+    const cleanup = () => {
+      document.getElementById('custom-alert-overlay').classList.add('hidden');
+      okBtn.onclick = null; cancelBtn.onclick = null;
+    };
+
+    okBtn.onclick     = () => { cleanup(); resolve(true); };
+    cancelBtn.onclick = () => { cleanup(); resolve(false); };
+
+    document.getElementById('custom-alert-overlay').classList.remove('hidden');
+  });
+}
+
+// -------------------------------------------------------------------
+// MODULE: Developer Mock Engine
+// -------------------------------------------------------------------
+if (typeof google === 'undefined') {
+  console.warn("Running in UI Preview/Mock mode.");
+  window.google = { script: { run: { withSuccessHandler: function(cb) { return new Proxy({}, { get: function(target, prop) { return function(...args) { let mockData = null; if (prop === 'getProgramList') mockData = ['Mock BTEC']; else if (prop === 'getSpecificationList') mockData = ['Mock IT']; else if (prop === 'getAdminTickets') mockData = []; else if (prop === 'getMasterStudentList') mockData = []; else if (prop === 'getAllUsersAdmin') mockData = []; else if (prop === 'getAllNewsAdmin') mockData = []; else if (prop === 'getAccessKitFormOptions') mockData = null; else if (prop === 'getAccessKitList') mockData = []; else if (prop === 'attemptLogin' || prop === 'attemptDemoLogin') mockData = { success: true, role: 'Admin', name: 'Admin', id: 'ADM-000' }; else if (prop === 'getAdminDashboardData') mockData = {}; else if (prop === 'getMyGrades') mockData = { completedUnits: 14, totalCredits: 120, records: [] }; else if (prop === 'getDashboardData') mockData = { news: [{author:'Admin', date:'Today', title:'System Update'}] }; else if (prop === 'getStudentTickets') mockData = []; else mockData = { success: true, message: `Mock: ${prop}` }; if (cb) setTimeout(() => cb(mockData), 300); }; } }); }, withFailureHandler: function() { return this; } } } };
+}
+
+// -------------------------------------------------------------------
+// MODULE: Universal Diff Checker (Surgical Updates)
+// -------------------------------------------------------------------
+let activeModalSnapshot = {};
+
+function getDirtyFields(currentFormValues) {
+  const changedFields = {};
+  let hasChanges = false;
+
+  for (const key in currentFormValues) {
+    const snapVal = String(activeModalSnapshot[key] || "").trim();
+    const curVal  = String(currentFormValues[key]   || "").trim();
+
+    if (snapVal !== curVal) {
+      changedFields[key] = curVal;
+      hasChanges = true;
+    }
+  }
+  return hasChanges ? changedFields : null;
+}
+
+// -------------------------------------------------------------------
+// SECURITY: HTML Sanitizer (XSS Protection)
+// -------------------------------------------------------------------
+function escapeHTML(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: globalRefresh
+// FIX: Adviser key corrected from 'lastAdvPage' → 'lastAdviserPage'
+//      Default for Adviser corrected from 'dashboard' → 'home'
+// -------------------------------------------------------------------
+function globalRefresh(btn) {
+  if (btn) {
+    btn.disabled = true;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="material-icons" style="font-size:16px; margin-right:4px; animation:spin 1s linear infinite;">sync</span> Loading...';
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = originalHTML; }, 2000);
+  }
+
+  if (typeof adminNav === 'function') {
+    const currentView = localStorage.getItem('lastAdminPage') || 'dashboard';
+    adminNav(currentView, null, true);
+  } else if (typeof advNav === 'function') {
+    // FIX: was 'lastAdvPage' / 'dashboard' — corrected to match advNav's own key
+    const currentView = localStorage.getItem('lastAdviserPage') || 'home';
+    advNav(currentView, null, true);
+  } else if (typeof studentNav === 'function') {
+    const currentView = localStorage.getItem('lastStudentPage') || 'dashboard';
+    studentNav(currentView, null, true);
+  }
+}
+
+// -------------------------------------------------------------------
+// THE UNLOCKER
+// -------------------------------------------------------------------
+function globalUnlock() {
+  if (currentRefreshIcon) {
+    currentRefreshIcon.classList.remove('spin-anim');
+    currentRefreshIcon = null;
+  }
+  if (currentActivePage) {
+    const allButtons = currentActivePage.querySelectorAll('button');
+    allButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor  = 'pointer';
+    });
+    currentActivePage = null;
+  }
+}
+
+// -------------------------------------------------------------------
+// UNIVERSAL NAME FORMATTER
+// -------------------------------------------------------------------
+function formatUniversalName(firstName, middleInitial, lastName) {
+  const fName = (firstName     || "").trim();
+  const lName = (lastName      || "").trim();
+  const mi    = (middleInitial || "").trim() ? (middleInitial || "").trim() : "";
+  return [fName, mi, lName].filter(Boolean).join(" ");
+}
+
+// ===================================================================
+// NEW SHARED UTILITIES
+// These 4 functions eliminate the biggest copy-paste patterns across
+// Admin.html, Adviser.html, and Student.html.
+// ===================================================================
+
+// -------------------------------------------------------------------
+// setBtnLoading
+// PURPOSE: Replaces 30+ repeated "btn.innerText = 'Saving...'; btn.disabled = true"
+//          patterns with a single reusable function.
+// USAGE:
+//   const restore = setBtnLoading(btn);
+//   // on success or failure:
+//   restore();
+// -------------------------------------------------------------------
+function setBtnLoading(btn, loadingText = "Saving...") {
+  const orig    = btn.innerHTML;
+  btn.disabled  = true;
+  btn.innerHTML = loadingText;
+  return () => {
+    btn.disabled  = false;
+    btn.innerHTML = orig;
+  };
+}
+
+// -------------------------------------------------------------------
+// readFileAsBase64
+// PURPOSE: Replaces 12+ repeated FileReader encode patterns across
+//          Admin, Adviser, and Student portals.
+//          Returns a Promise that resolves to { fileData, fileName, mimeType }
+//          or null if no file was selected.
+// USAGE:
+//   const attachment = await readFileAsBase64(document.getElementById('my-file'));
+//   if (attachment) Object.assign(payload, attachment);
+//   sendToBackend(payload);
+// -------------------------------------------------------------------
+function readFileAsBase64(fileInput) {
+  return new Promise((resolve) => {
+    if (!fileInput || !fileInput.files || !fileInput.files.length) return resolve(null);
+    const reader = new FileReader();
+    reader.onload = e => resolve({
+      fileData: e.target.result.split(',')[1],
+      fileName: fileInput.files[0].name,
+      mimeType: fileInput.files[0].type
+    });
+    reader.readAsDataURL(fileInput.files[0]);
+  });
+}
+
+// -------------------------------------------------------------------
+// makeBadge
+// PURPOSE: Centralizes 15+ repeated badge HTML string patterns.
+//          Ensures consistent badge class naming across all portals.
+// USAGE:
+//   tbody.innerHTML = data.map(r => `<tr><td>${makeBadge(r.status)}</td></tr>`).join('');
+// -------------------------------------------------------------------
+function makeBadge(status) {
+  const cls = String(status || '').replace(/\s/g, '');
+  return `<span class="badge status-${cls}">${escapeHTML(status)}</span>`;
+}
+
+// -------------------------------------------------------------------
+// globalError
+// PURPOSE: Standard withFailureHandler for all google.script.run calls.
+//          Eliminates silent failures — currently 44 calls in Admin,
+//          10 in Adviser, and 7 in Student have no failure handler.
+// USAGE:
+//   google.script.run
+//     .withFailureHandler(globalError)
+//     .withSuccessHandler(res => { hideLoader(); ... })
+//     .yourBackendFunction(...);
+// -------------------------------------------------------------------
+function globalError(err) {
+  hideLoader();
+  console.error('Backend Error:', err);
+  alert('System Error: ' + (err.message || 'An unexpected error occurred. Please try again.'));
+}
+
+</script>
