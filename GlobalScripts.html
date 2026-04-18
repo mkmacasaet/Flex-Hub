@@ -161,15 +161,7 @@ function globalUnlock() {
   }
 }
 
-// -------------------------------------------------------------------
-// UNIVERSAL NAME FORMATTER
-// -------------------------------------------------------------------
-function formatUniversalName(firstName, middleInitial, lastName) {
-  const fName = (firstName     || "").trim();
-  const lName = (lastName      || "").trim();
-  const mi    = (middleInitial || "").trim() ? (middleInitial || "").trim() : "";
-  return [fName, mi, lName].filter(Boolean).join(" ");
-}
+
 
 // ===================================================================
 // NEW SHARED UTILITIES
