@@ -112,3 +112,13 @@ function getStudentIndexSheet() {
 function getAYSheet() {
   return SpreadsheetApp.getActiveSpreadsheet().getSheetByName('_AcademicYears');
 }
+
+// -------------------------------------------------------------------
+// UNIVERSAL NAME FORMATTER
+// -------------------------------------------------------------------
+function formatUniversalName(firstName, middleInitial, lastName) {
+  const fName = (firstName     || "").trim();
+  const lName = (lastName      || "").trim();
+  const mi    = (middleInitial || "").trim() ? (middleInitial || "").trim() : "";
+  return [fName, mi, lName].filter(Boolean).join(" ");
+}
