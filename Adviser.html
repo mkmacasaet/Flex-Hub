@@ -1,0 +1,1562 @@
+<div id="advDeferralModal" class="modal">
+  <div class="modal-content wide" style="max-width:600px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h2 style="margin:0;">Review Deferral Request</h2>
+      <span class="material-icons" style="cursor:pointer;" onclick="document.getElementById('advDeferralModal').style.display='none'">close</span>
+    </div>
+    <div class="scrollable-form">
+      <input type="hidden" id="adfd-rowIndex">
+      <input type="hidden" id="adfd-id">
+      
+      <div style="background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #e2e8f0;">
+          <p style="margin:0 0 5px 0;"><strong>Student:</strong> <span id="adfd-name"></span></p>
+          <p style="margin:0 0 5px 0;"><strong>Unit:</strong> <span id="adfd-unit"></span></p>
+          <p style="margin:0 0 5px 0;"><strong>Original Deadline:</strong> <span id="adfd-origDeadline"></span></p>
+          <p style="margin:0 0 5px 0;"><strong>Reason:</strong> <span id="adfd-reason" style="color:#475569;"></span></p>
+          <div id="adfd-doc-container" class="hidden" style="margin-top:10px;">
+            <a href="#" id="adfd-doc-link" target="_blank" style="color:var(--primary); font-weight:600; font-size:13px;"><span class="material-icons" style="font-size:16px; vertical-align:middle;">attach_file</span> View Attached Document</a>
+          </div>
+      </div>
+
+      <div class="form-section-title" style="color:#059669;">Adviser Decision</div>
+      <div class="row">
+        <div class="form-group col">
+          <label>Approved Ext. Days</label>
+          <input type="number" id="adfd-extDays" min="1" max="21">
+        </div>
+        <div class="form-group col">
+          <label>Status <span style="color:red">*</span></label>
+          <select id="adfd-status" style="font-weight:bold;">
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Not Approved">Not Approved</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Adviser Remarks</label>
+        <input type="text" id="adfd-remarks" placeholder="Provide feedback or conditions...">
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px; border-top:1px solid #e2e8f0; padding-top:15px;">
+      <button class="btn btn-outline" onclick="document.getElementById('advDeferralModal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary" id="adfd-save-btn" onclick="saveAdviserDeferral()">Submit Decision</button>
+    </div>
+  </div>
+</div>
+
+<div id="view-adviser" class="hidden" style="display: flex; height: 100vh; width: 100%;">
+  
+  <div class="sidebar" id="sidebar-adviser"> 
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 20px 20px 10px 20px;">
+        <div class="sidebar-header" style="padding:0; border:none; margin:0; display:flex; align-items:center; color:white; font-size:16px; font-weight:bold;">
+            <span class="material-icons" style="margin-right:5px; font-size:20px;">supervisor_account</span> 
+            <span class="sidebar-text">Adviser Portal</span>
+        </div>
+        <span class="material-icons sidebar-toggle" onclick="toggleSidebar('adviser')" title="Toggle Sidebar">menu_open</span>
+    </div>
+
+    <div class="user-info" style="padding: 0 20px 15px 20px; font-size: 12px; margin-bottom: 10px; color:#cbd5e1;">
+      Welcome back,<br><strong id="adv-user-name" style="color: white; font-size: 14px; display: block; margin-top: 4px;">Staff Member</strong>
+    </div>
+
+    <div class="nav-item active" id="adv-nav-home" onclick="advNav('home', this)">
+      <span class="material-icons">campaign</span> <span>News & Updates</span>
+    </div>
+    
+    <div class="nav-item" id="adv-nav-grading" onclick="advNav('grading', this)">
+      <span class="material-icons">auto_graph</span> <span>My Grading</span>
+    </div>
+
+    <div class="nav-item" id="adv-nav-risk" onclick="advNav('risk', this)">
+      <span class="material-icons">warning</span> <span>My Students-At-Risk</span>
+    </div>
+    
+    <div class="nav-item hidden" id="nav-btn-iv" onclick="advNav('iv', this)">
+      <span class="material-icons">fact_check</span> <span>IV Allocations</span>
+    </div>
+    
+    <div class="nav-item" id="adv-nav-meetings" onclick="advNav('meetings', this)">
+      <span class="material-icons">co_present</span> <span>Consultations</span>
+    </div>
+    
+    <div class="nav-item" id="adv-nav-deferrals" onclick="advNav('deferrals', this)">
+      <span class="material-icons">event_repeat</span> <span>Student Deferrals</span>
+    </div>
+    
+    <div class="nav-item" id="adv-nav-payroll" onclick="advNav('payroll', this)">
+      <span class="material-icons">account_balance_wallet</span> <span>My Payroll</span>
+    </div>
+    
+    <div class="nav-item" id="adv-nav-helpdesk" onclick="advNav('helpdesk', this)">
+      <span class="material-icons">support_agent</span> <span>Helpdesk</span>
+    </div>
+    
+    <div style="flex:1;"></div>
+    
+    <div class="nav-item" style="color: #fda4af;" onclick="logout()">
+      <span class="material-icons">logout</span> <span>Logout</span>
+    </div>
+  </div>
+
+  <div class="admin-main" id="main-adviser">
+    
+    <div id="adv-page-home">
+      <div style="margin-bottom: 5px;">
+        <h2 style="margin-top:0; font-size:28px; font-weight:800; letter-spacing:-0.5px; color: var(--text);">Adviser Command Center</h2>
+        <p style="color: var(--text-muted); font-size: 15px; margin-top: 4px;">Welcome back. Here is your operational overview for today.</p>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; align-items:start;">
+        
+        <div id="adv-news-feed" style="display:flex; flex-direction:column; gap:15px;">
+           </div>
+        
+        <div style="display:flex; flex-direction:column; gap:15px;">
+          <div id="adv-calendar-widget"></div>
+        </div>
+        
+        <div id="adv-widgets-container" style="display:flex; flex-direction:column; gap:15px;">
+           </div>
+        
+      </div>
+    </div>
+
+    <div id="adv-page-grading" class="hidden">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+          <h2 style="margin:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">My Grading (Performance Monitor)</h2>
+          <select id="adv-pm-ay" onchange="loadAdvGrades()" style="padding:10px; border-radius:8px; border:1px solid var(--border); outline:none; font-weight:600; min-width:200px;"><option value="">Loading...</option></select>
+        </div>
+        <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); border: 1px solid var(--border);">
+          
+          <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="position:relative; flex:1;">
+              <span class="material-icons" style="position:absolute; left:12px; top:12px; color:var(--text-muted); font-size:20px;">search</span>
+              <input type="text" id="adv-pm-search" placeholder="Search by Student ID or Name..." onkeyup="handleAdvPmSearch()" style="width:100%; padding:12px 12px 12px 42px; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box; outline:none;">
+            </div>
+            <select id="adv-pm-unit-filter" onchange="handleAdvPmSearch()" style="padding:10px; border-radius:8px; border:1px solid var(--border); outline:none; font-weight:600; min-width:180px; color:#475569; cursor:pointer;">
+              <option value="">All My Units</option>
+            </select>
+          </div>
+
+          <table class="data-table">
+            <thead><tr><th>Student ID</th><th>Name</th><th>Unit</th><th>Term</th><th>Assessor Grade</th><th>Action</th></tr></thead>
+            <tbody id="adv-pm-body">
+              <tr><td colspan='6' style='text-align:center; padding:20px; color:var(--text-muted);'>Please select an Academic Year.</td></tr>
+            </tbody>
+          </table>
+        </div>
+    </div>
+
+    <div id="adv-page-risk" class="hidden">
+      <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">My Students' Risk Profile</h2>
+          <p style="color:var(--text-muted); margin-top:5px; font-size:14px;">Monitor potential students-at-risks and active interventions for your assigned advisees.</p>
+        </div>
+        <button class="btn btn-primary btn-header" onclick="loadAdvRiskMonitor()"><span class="material-icons" style="font-size:16px; margin-right:4px;">radar</span> Scan My Students</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:20px; align-items:start;">
+        
+        <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); border: 1px solid var(--border); display:flex; flex-direction:column; overflow:hidden;">
+  
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin:0; font-size:16px; color:#ea580c; display:flex; align-items:center; gap:6px;">
+              <span class="material-icons">notifications_active</span> Potential Students-At-Risks
+            </h3>
+            
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-outline" onclick="advBatchDismissWarnings()" title="Dismiss selected warnings" style="padding:4px 10px; font-size:12px; color:#ef4444; border-color:#fecaca;">
+                <span class="material-icons" style="font-size:14px; margin-right:4px; vertical-align:middle;">delete_sweep</span> Dismiss
+              </button>
+              <button class="btn btn-primary" onclick="advBatchFlagStudents()" title="Move selected to Active Cases" style="padding:4px 10px; font-size:12px;">
+                Flag <span class="material-icons" style="font-size:14px; margin-left:4px; vertical-align:middle;">arrow_forward</span>
+              </button>
+              <span class="badge" id="adv-warn-count" style="background:#ffedd5; color:#c2410c; margin-left:4px;">0</span>
+            </div>
+          </div>
+          
+          <div style="display:flex; align-items:center; background:white; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; margin-bottom:15px;">
+            <span class="material-icons" style="color:var(--text-muted); font-size:18px; margin-right:8px;">search</span>
+            <input type="text" id="adv-warning-search" placeholder="Search my warnings..." onkeyup="handleAdvWarningSearch()" style="width:100%; border:none; outline:none; font-size:13px; background:transparent;">
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="data-table" style="border:none; box-shadow:none; width:100%;">
+              <thead>
+                <tr>
+                  <th style="width:30px; text-align:center;">
+                    <input type="checkbox" id="adv-chk-all-warn" onchange="toggleAdvAllWarnings(this)" style="cursor:pointer;">
+                  </th>
+                  <th>Student</th>
+                  <th>Detected Risks</th>
+                </tr>
+              </thead>
+              <tbody id="adv-warning-body">
+                <tr><td colspan="3" style="text-align:center; padding:20px;">Click 'Scan My Students'</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="adv-warning-pagination" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;"></div>
+        </div>
+
+        <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); border: 1px solid var(--border); display:flex; flex-direction:column; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:16px; color:#dc2626; display:flex; align-items:center; gap:6px;"><span class="material-icons">gavel</span> Active Cases</h3>
+            <span class="badge" id="adv-flagged-count" style="background:#fee2e2; color:#b91c1c;">0</span>
+          </div>
+          
+          <div style="display:flex; align-items:center; background:white; border:1px solid #e2e8f0; border-radius:6px; padding:4px 8px; margin-bottom:15px; gap:8px;">
+            <span class="material-icons" style="color:var(--text-muted); font-size:18px;">search</span>
+            <input type="text" id="adv-flagged-search" placeholder="Search cases..." onkeyup="handleAdvFlaggedSearch()" style="flex:1; border:none; outline:none; font-size:13px; background:transparent;">
+            
+            <select id="adv-flagged-status" onchange="handleAdvFlaggedSearch()" style="border:none; background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:12px; outline:none; font-weight:600; color:#475569; cursor:pointer;">
+              <option value="All">All Cases</option>
+              <option value="Flagged">Active Cases</option>
+              <option value="Resolved">Resolved History</option>
+            </select>
+          </div>
+
+          <div style="overflow-x:auto;">
+            <table class="data-table" style="border:none; box-shadow:none; width:100%;">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Factors</th>
+                  <th style="text-align:center;">Log</th> </tr>
+                </tr>
+              </thead>
+              <tbody id="adv-flagged-body">
+                <tr><td colspan="2" style="text-align:center; padding:20px; color:var(--text-muted);">No active cases.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="adv-flagged-pagination" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="advRiskActionModal" class="modal">
+      <div class="modal-content" style="max-width:500px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <h2 style="margin:0;">Intervention Log</h2>
+          <span class="material-icons" style="cursor:pointer;" onclick="document.getElementById('advRiskActionModal').style.display='none'">close</span>
+        </div>
+        
+        <input type="hidden" id="adv-ra-recordId">
+        
+        <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:15px; font-size:13px;">
+          <div style="margin-bottom:6px;"><strong>Student:</strong> <span id="adv-ra-student" style="color:var(--primary); font-size:14px; font-weight:700;"></span></div>
+          <div style="margin-bottom:6px;"><strong>Factors:</strong> <span id="adv-ra-factors" style="font-weight:600;"></span></div>
+          
+          <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+            <strong>Details:</strong>
+            <div id="adv-ra-details" style="margin-top:5px; color:#475569; white-space:pre-wrap; line-height:1.4;"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Update Case Status</label>
+          <select id="adv-ra-status" style="font-weight:bold; background:#eff6ff; border-color:#bfdbfe; color:#1e3a8a;">
+            <option value="Flagged">Flagged (Monitoring)</option>
+            <option value="Resolved">Resolved (Close Case)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Add New Action / Note</label>
+          <textarea id="adv-ra-newLog" rows="3" placeholder="e.g. Met with student, agreed on a study plan..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>History</label>
+          <div id="adv-ra-history" style="font-size:12px; background:#fff; padding:10px; border:1px solid #e2e8f0; border-radius:6px; min-height:60px; max-height:150px; overflow-y:auto; white-space:pre-wrap; color:#475569;"></div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">
+          <button class="btn btn-outline" onclick="document.getElementById('advRiskActionModal').style.display='none'">Cancel</button>
+          <button class="btn btn-primary" id="adv-ra-submit-btn" onclick="saveAdvRiskAction()">Save Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="custom-confirm-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(2px);">
+      <div style="background:white; padding:24px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.15); animation: fade-in-up 0.2s ease-out;">
+        <h3 style="margin-top:0; color:#0f172a; font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px;">
+          <span class="material-icons" style="color:#f59e0b;">help_outline</span> Confirm Action
+        </h3>
+        <p id="custom-confirm-message" style="color:#64748b; font-size:14px; margin:16px 0; line-height:1.5;">
+          Are you sure you want to proceed?
+        </p>
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+          <button onclick="closeConfirmModal()" class="btn btn-outline" style="padding:8px 16px; color:#64748b; border: 1px solid #cbd5e1;">Cancel</button>
+          <button id="custom-confirm-btn" class="btn btn-primary" style="padding:8px 16px;">Yes, Proceed</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adv-page-iv" class="hidden">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+          <h2 style="margin:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">IV Allocations (Quality Assurance)</h2>
+          <select id="adv-iv-ay" onchange="loadIvAllocations()" style="padding:10px; border-radius:8px; border:1px solid var(--border); outline:none; font-weight:600; min-width:200px;"><option value="">Loading...</option></select>
+        </div>
+        <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); border: 1px solid var(--border);">
+          
+          <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="position:relative; flex:1;">
+              <span class="material-icons" style="position:absolute; left:12px; top:12px; color:var(--text-muted); font-size:20px;">search</span>
+              <input type="text" id="adv-iv-search" placeholder="Search by Student ID or Name..." onkeyup="handleAdvIvSearch()" style="width:100%; padding:12px 12px 12px 42px; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box; outline:none;">
+            </div>
+            <select id="adv-iv-unit-filter" onchange="handleAdvIvSearch()" style="padding:10px; border-radius:8px; border:1px solid var(--border); outline:none; font-weight:600; min-width:180px; color:#475569; cursor:pointer;">
+              <option value="">All My IV Units</option>
+            </select>
+          </div>
+
+          <table class="data-table">
+            <thead><tr><th>Student ID</th><th>Name</th><th>Unit</th><th>Term</th><th>IV Grade</th><th>Action</th></tr></thead>
+            <tbody id="adv-iv-body">
+                <tr><td colspan='6' style='text-align:center; padding:20px; color:var(--text-muted);'>Please select an Academic Year.</td></tr>
+            </tbody>
+          </table>
+        </div>
+    </div>
+
+    <div id="adv-page-meetings" class="hidden">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+          <h2 style="margin:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">My Consultations</h2>
+          <button class="btn btn-primary btn-header" onclick="openAdvMeetingModal()">+ Log Meeting</button>
+        </div>
+        <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); border: 1px solid var(--border);">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Student</th><th>Unit</th><th>Duration</th><th>Topic</th><th>Payroll</th></tr></thead>
+            <tbody id="adv-mtg-body"></tbody>
+          </table>
+        </div>
+    </div>
+
+    <div id="adv-page-deferrals" class="hidden">
+      <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+        <h2 style="margin:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">Student Deferrals (Action Required)</h2>
+        <button class="btn btn-outline btn-header" onclick="loadAdviserDeferrals()"><span class="material-icons" style="font-size:16px; margin-right:4px;">refresh</span> Refresh</button>
+      </div>
+      <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); border: 1px solid var(--border);">
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Student</th><th>Unit</th><th>Requested Ext.</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="adv-def-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="adv-page-helpdesk" class="hidden">
+        <h2 style="margin-top:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">Staff Helpdesk Support</h2>
+        <div style="max-width:800px; margin-top:20px;">
+          <div style="background:white; padding:30px; border-radius:16px; box-shadow:var(--shadow); border: 1px solid var(--border); margin-bottom:30px;">
+              <div class="form-group"><label>Summary of Concern <span style="color:red">*</span></label><input type="text" id="adv-t-summary" placeholder="e.g. Cannot access student folder"></div>
+              <div class="form-group"><label>Details / Notes</label><textarea id="adv-t-notes" rows="4"></textarea></div>
+              
+              <div class="form-group">
+                <label>Attachment (Screenshot / Evidence)</label>
+                <input type="file" id="adv-t-file" style="border:none; padding:0;">
+              </div>
+
+              <button class="btn btn-primary" style="width:100%; padding:14px; font-size:15px;" onclick="submitAdvTicket()" id="adv-t-submit">Submit Ticket</button>
+          </div>
+          <div style="background:white; padding:30px; border-radius:16px; box-shadow:var(--shadow); border: 1px solid var(--border);">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                <span class="material-icons" style="color:var(--text-muted);">history</span><h2 style="margin:0; font-size:18px;">My Ticket History</h2><div style="flex:1;"></div><button class="btn btn-outline" onclick="loadAdvHelpdesk()" style="padding:6px 12px; font-size:12px;">Refresh</button>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="data-table"><thead><tr><th>ID</th><th>Date</th><th>Summary</th><th>Attachment</th><th>Status</th><th>Remarks</th></tr></thead><tbody id="adv-ticket-history"></tbody></table>
+              </div>
+          </div>
+        </div>
+    </div>
+
+    <div id="adv-page-payroll" class="hidden">
+
+      <div class="payroll-header">
+        <h2 class="payroll-title">Payroll & Compensation Monitor</h2>
+        <p class="payroll-desc">Track processed payments for advising, assessments, and consultations.</p>
+      </div>
+
+      <div class="pay-filter-bar">
+        <div class="pay-filter-group" style="min-width: 200px;">
+          <label class="pay-filter-label">Academic Year</label>
+          <select id="adv-pay-ay" class="pay-filter-input" onchange="fetchAdvPayrollData()">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+        <div class="pay-filter-group">
+          <label class="pay-filter-label">Payment Status</label>
+          <select id="adv-pay-filter" class="pay-filter-input" onchange="resetPayPages(); renderAdvPayroll()">
+            <option value="All">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+          </select>
+        </div>
+        <div class="pay-filter-group large">
+          <label class="pay-filter-label">Search Records</label>
+          <input type="text" id="adv-pay-search" class="pay-filter-input" placeholder="Search by student name or unit..." onkeyup="resetPayPages(); renderAdvPayroll()">
+        </div>
+      </div>
+
+      <div class="pay-tab-container">
+        <button class="pay-tab active" onclick="switchPayTab('advising')" id="tab-btn-advising">
+          <span class="material-icons" style="vertical-align:middle; font-size:18px; margin-right:5px;">psychology</span> Advising
+        </button>
+        <button class="pay-tab" onclick="switchPayTab('assessment')" id="tab-btn-assessment">
+          <span class="material-icons" style="vertical-align:middle; font-size:18px; margin-right:5px;">fact_check</span> Assessment
+        </button>
+        <button class="pay-tab" onclick="switchPayTab('consultation')" id="tab-btn-consultation">
+          <span class="material-icons" style="vertical-align:middle; font-size:18px; margin-right:5px;">co_present</span> Consultations
+        </button>
+      </div>
+
+      <div id="pay-panel-advising" class="pay-panel active">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Student</th><th>Unit</th><th>Term</th><th>Status</th><th>Remarks / Date Paid</th></tr></thead>
+            <tbody id="pay-adv-body"></tbody>
+          </table>
+        </div>
+        <div class="pay-pagination">
+          <button class="btn btn-outline" onclick="changePayPage('advising', -1)">Previous</button>
+          <span id="pay-adv-page-text" class="pay-page-info">Page 1 of 1</span>
+          <button class="btn btn-outline" onclick="changePayPage('advising', 1)">Next</button>
+        </div>
+      </div>
+
+      <div id="pay-panel-assessment" class="pay-panel">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Student</th><th>Unit</th><th>Term</th><th>Role</th><th>Status</th><th>Remarks / Date Paid</th></tr></thead>
+            <tbody id="pay-ass-body"></tbody>
+          </table>
+        </div>
+        <div class="pay-pagination">
+          <button class="btn btn-outline" onclick="changePayPage('assessment', -1)">Previous</button>
+          <span id="pay-ass-page-text" class="pay-page-info">Page 1 of 1</span>
+          <button class="btn btn-outline" onclick="changePayPage('assessment', 1)">Next</button>
+        </div>
+      </div>
+
+      <div id="pay-panel-consultation" class="pay-panel">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Student</th><th>Duration</th><th>Status</th><th>Remarks / Date Paid</th></tr></thead>
+            <tbody id="pay-con-body"></tbody>
+          </table>
+        </div>
+        <div class="pay-pagination">
+          <button class="btn btn-outline" onclick="changePayPage('consultation', -1)">Previous</button>
+          <span id="pay-con-page-text" class="pay-page-info">Page 1 of 1</span>
+          <button class="btn btn-outline" onclick="changePayPage('consultation', 1)">Next</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+// --- CALENDAR & DASHBOARD STATE ---
+let advCalendarDisplayMonth = new Date().getMonth();
+let advCalendarDisplayYear = new Date().getFullYear();
+let advDashboardCache = {};
+
+let advDeferralData = [];
+const advLoadedModules = new Set(); 
+
+// -------------------------------------------------------------------
+// FUNCTION: advNav
+// TRIGGER: Clicking any sidebar item in the Adviser portal.
+// PURPOSE: Hides all sections, unhides target section, and fires the 
+//          corresponding data load function for that view (using Cache).
+// -------------------------------------------------------------------
+function advNav(view, btn, forceReload = false) { 
+  localStorage.setItem('lastAdviserPage', view);
+
+  ['adv-page-home', 'adv-page-grading','adv-page-risk','adv-page-iv', 'adv-page-meetings', 'adv-page-deferrals', 'adv-page-helpdesk', 'adv-page-payroll'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.classList.add('hidden');
+  });
+  document.querySelectorAll('#view-adviser .nav-item').forEach(item => item.classList.remove('active'));
+  
+  const target = document.getElementById('adv-page-' + view);
+  if (target) target.classList.remove('hidden');
+  if (btn) btn.classList.add('active');
+  else { const autoBtn = document.querySelector(`#view-adviser .nav-item[onclick*="'${view}'"]`); if (autoBtn) autoBtn.classList.add('active'); }
+  
+  // <--- 3. WRAP LOADERS IN THE CACHE CHECK
+  if (forceReload || !advLoadedModules.has(view)) {
+    if (view === 'home') loadAdvDashboard();
+    if (view === 'grading') loadAdvGradingAYs();
+    if (view === 'risk') loadAdvRiskMonitor();
+    if (view === 'iv') loadIvAllocationsAYs();
+    if (view === 'meetings') loadAdvMeetings();
+    if (view === 'deferrals') loadAdviserDeferrals();
+    if (view === 'helpdesk') loadAdvHelpdesk();
+    if (view === 'payroll') { loadAdvPayrollAYs(); 
+    loadAdvPayrollMeetings(); }
+    
+    advLoadedModules.add(view); 
+  }
+}
+
+// -------------------------------------------------------------------
+// SECTION 1: DASHBOARD & NEWS
+// -------------------------------------------------------------------
+function loadAdvDashboard() {
+  const feed = document.getElementById('adv-news-feed');
+  const widgets = document.getElementById('adv-widgets-container');
+  
+  feed.innerHTML = `
+    <div style="padding:40px; text-align:center; color:var(--text-muted); font-weight:600; background:white; border-radius:12px; border:1px solid var(--border);">
+      <span class="material-icons" style="font-size:32px; color:var(--primary); margin-bottom:10px; animation: spin 2s linear infinite;">sync</span><br>
+      Fetching latest announcements...
+    </div>`;
+    
+  // Notice we only load the spinner for the Action Center / Quick Links now
+  widgets.innerHTML = `
+    <div style="padding:40px; text-align:center; color:var(--text-muted); font-weight:600; background:white; border-radius:12px; border:1px solid var(--border);">
+      <span class="material-icons" style="font-size:32px; color:var(--primary); margin-bottom:10px; animation: pulse 1.5s infinite;">donut_large</span><br>
+      Aggregating operational data...
+    </div>`;
+  
+  google.script.run.withSuccessHandler(res => {
+    
+    if (res.error) {
+      feed.innerHTML = `<div style="color:red; padding:20px; font-weight:bold;">Error: ${res.error}</div>`;
+      widgets.innerHTML = '';
+      return;
+    }
+
+    // Save data to cache so the calendar can read the events!
+    advDashboardCache = res;
+
+    // ===============================================
+    // 1. LEFT COLUMN: Social Media Newsfeed
+    // ===============================================
+    if (!res.news || res.news.length === 0) { 
+      feed.innerHTML = '<div style="color:var(--text-muted); padding:30px; text-align:center; background:white; border-radius:12px; border:1px solid var(--border);">No new announcements. You are all caught up!</div>'; 
+    } else {
+      feed.innerHTML = res.news.map(n => {
+        const authorName = n.author || "Admin Office";
+        const initial = authorName.charAt(0).toUpperCase();
+        const audience = n.audience || "General";
+        
+        return `
+        <div class="news-card">
+          <div class="news-header">
+            <div class="news-avatar">${initial}</div>
+            <div class="news-meta">
+              <div class="news-author">${authorName}</div>
+              <div class="news-date">${n.date} • ${audience}</div>
+            </div>
+          </div>
+          <div class="news-content">
+            <h3 class="news-title">${n.title}</h3>
+            <div class="news-body">${n.content}</div>
+          </div>
+          ${n.attachment ? `
+          <a href="${n.attachment}" target="_blank" class="news-attachment">
+            <div class="att-icon"><span class="material-icons">description</span></div>
+            <div class="att-details">
+              <div class="att-name">Attached Document</div>
+              <div class="att-action">Click to view / download</div>
+            </div>
+          </a>` : ''}
+          <div class="news-footer">
+            <button class="btn btn-outline" style="font-size:12px; border:none; background:#f8fafc; color:#64748b;" onclick="this.innerHTML='<span class=\\'material-icons\\' style=\\'font-size:16px; color:var(--primary);\\'>thumb_up</span> Acknowledged'; this.style.color='var(--primary)'; this.style.background='var(--primary-light)';"><span class="material-icons" style="font-size:16px;">thumb_up_off_alt</span> Acknowledge</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ===============================================
+    // 2. RIGHT COLUMN: Command Center Widgets
+    // ===============================================
+    let html = '';
+
+    // --- WIDGET 1: Action Center (To-Do) ---
+    const act = res.actionCenter;
+    html += `
+    <div class="adv-widget">
+      <div class="adv-widget-title"><span class="material-icons">notifications_active</span> Action Center</div>
+      <div class="action-list">
+        <div class="action-item" onclick="advNav('deferrals')">
+          <div style="display:flex; flex-direction:column;"><span style="font-weight:700; font-size:13px;">Pending Deferrals</span><span style="font-size:11px; color:var(--text-muted);">Awaiting your review</span></div>
+          <div class="action-badge" style="background:${act.deferrals > 0 ? '#ef4444' : '#cbd5e1'};">${act.deferrals}</div>
+        </div>
+        <div class="action-item" onclick="advNav('grading')">
+          <div style="display:flex; flex-direction:column;"><span style="font-weight:700; font-size:13px;">Ungraded Units</span><span style="font-size:11px; color:var(--text-muted);">In Performance Monitor</span></div>
+          <div class="action-badge" style="background:${act.ungraded > 0 ? '#eab308' : '#cbd5e1'};">${act.ungraded}</div>
+        </div>
+      </div>
+    </div>`;
+    
+    // --- WIDGET 2: Quick Links ---
+    if (res.quickLinks && res.quickLinks.length > 0) {
+      html += `
+      <div class="adv-widget" style="padding-bottom:15px;">
+        <div class="adv-widget-title"><span class="material-icons">bolt</span> Quick Actions</div>
+        <div class="ql-grid">
+          ${res.quickLinks.map(l => `<a href="${l.url}" target="_blank" class="ql-item"><span class="material-icons">${l.icon}</span><span style="font-size:11px; font-weight:700;">${l.title}</span></a>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    widgets.innerHTML = html;
+
+    // ===============================================
+    // 3. MIDDLE COLUMN: Trigger Calendar Render
+    // ===============================================
+    // This will now successfully target the <div id="adv-calendar-widget"> you placed in the middle HTML column!
+    renderAdvCalendar();
+
+  }).getAdviserDashboardData(currentUser.token, currentUser.name, currentUser.email, currentUser.role);
+}
+
+// -------------------------------------------------------------------
+// SECTION 2: GRADING MODULE
+// -------------------------------------------------------------------
+function loadAdvGradingAYs() {
+  const select = document.getElementById('adv-pm-ay');
+  
+  if (select.options.length <= 1) { 
+    select.innerHTML = '<option value="">Loading Academic Years...</option>';
+    google.script.run.withSuccessHandler(ays => {
+      let html = '<option value="">- Select Academic Year -</option>';
+      ays.forEach(ay => { html += `<option value="${ay.id}">${ay.year} ${ay.status === 'Active' ? '(Active)' : ''}</option>`; });
+      select.innerHTML = html;
+      const active = ays.find(a => a.status === 'Active');
+      if (active) { select.value = active.id; loadAdvGrades(); }
+    }).getAcademicYears(currentUser.token);
+  } else { loadAdvGrades(); }
+}
+
+// NEW STATE VARIABLES FOR FILTERING
+let advPmMasterData = [];
+let advPmFilteredData = [];
+
+function loadAdvGrades() {
+    const sheetId = document.getElementById('adv-pm-ay').value; 
+    const tbody = document.getElementById('adv-pm-body');
+    
+    if(!sheetId) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--text-muted);'>Please select an Academic Year.</td></tr>";
+        advPmMasterData = []; advPmFilteredData = [];
+        return;
+    }
+    
+    tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--primary); font-weight:600;'><span class='material-icons' style='vertical-align:middle; animation:spin 2s linear infinite; margin-right:5px;'>sync</span> Fetching assigned grades...</td></tr>";
+    
+    google.script.run
+      .withFailureHandler(err => { tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; color:red;'>System Error: ${err.message}</td></tr>`; })
+      .withSuccessHandler(res => {
+      if (res.error) { tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; color:red;'>${res.error}</td></tr>`; return; }
+      
+      pmMasterData = res; // We keep this here so the Grade Modal logic still works perfectly!
+      
+      // 1. Store only this adviser's data in our local memory
+      advPmMasterData = res.filter(r => r.adviserName === currentUser.name);
+      advPmFilteredData = [...advPmMasterData];
+      
+      if (advPmMasterData.length === 0) { 
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No units assigned to you for this year.</td></tr>"; 
+        return; 
+      }
+      
+      // 2. Populate the Unit Dropdown dynamically
+      populateAdvPmFilters();
+      
+      // 3. Render the initial table
+      renderAdvGradesTable();
+      
+    }).getGradesForAY(currentUser.token, sheetId);
+}
+
+// Extract unique units and fill the dropdown
+function populateAdvPmFilters() {
+    const units = [...new Set(advPmMasterData.map(r => r.unit).filter(Boolean))].sort();
+    const unitSelect = document.getElementById('adv-pm-unit-filter');
+    unitSelect.innerHTML = '<option value="">All My Units</option>' + units.map(u => `<option value="${u}">${u}</option>`).join('');
+}
+
+// Run the filter logic whenever they type or change the dropdown
+function handleAdvPmSearch() {
+    const q = document.getElementById('adv-pm-search').value.toLowerCase();
+    const unitFilter = document.getElementById('adv-pm-unit-filter').value;
+
+    advPmFilteredData = advPmMasterData.filter(r => {
+        const matchesText = (r.studentName||"").toLowerCase().includes(q) || (r.studentId||"").toLowerCase().includes(q);
+        const matchesUnit = !unitFilter || r.unit === unitFilter;
+        return matchesText && matchesUnit;
+    });
+
+    renderAdvGradesTable();
+}
+
+// Build the HTML rows
+function renderAdvGradesTable() {
+    const tbody = document.getElementById('adv-pm-body');
+
+    if (advPmFilteredData.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--text-muted);'>No students match your filter.</td></tr>";
+        return;
+    }
+
+    tbody.innerHTML = advPmFilteredData.map(r => `
+          <tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <td style="font-size:12px; color:var(--text-muted);">${r.studentId}</td>
+            <td><strong>${r.studentName}</strong></td><td>${r.unit}</td><td>${r.term}</td>
+            <td><span class="grade-badge grade-${(r.assessor||'').charAt(0)}">${r.assessor || '-'}</span></td>
+            <td><button class="btn btn-outline" style="padding:4px 10px; font-size:12px; color:var(--primary); border-color:#fecdd3;" onclick="openAdvGradeModal(${r.rowIndex})"><span class="material-icons" style="font-size:14px; vertical-align:middle;">edit</span> Grade</button></td>
+          </tr>
+    `).join('');
+}
+
+function openAdvGradeModal(rowIndex) {
+  openGradeViewModal(rowIndex); // Sets up the base form
+  document.getElementById('g-sheetId').value = document.getElementById('adv-pm-ay').value;
+
+  const r = pmMasterData.find(x => x.rowIndex === rowIndex);
+  const isReferred = r && String(r.assessor).toUpperCase() === 'REFERRED';
+
+  // Grab our elements
+  const advBanner = document.getElementById('g-adv-referred-banner');
+  const adminBanner = document.getElementById('g-admin-referred-banner');
+  const editBtn = document.getElementById('g-edit-btn');
+
+  // OVERRIDE: Hide the Admin notice because we are an Adviser!
+  if (adminBanner) adminBanner.classList.add('hidden');
+
+  if (isReferred) {
+      // --- THE RECORD IS LOCKED FOR ADVISER ---
+      if (advBanner) advBanner.classList.remove('hidden');
+      if (editBtn) editBtn.classList.add('hidden'); // Remove their ability to edit
+
+      // Lock EVERY field on the form
+      ['ge-lo1', 'ge-lo2', 'ge-lo3', 'ge-lo4', 'ge-assessor', 'ge-facultyRemarks', 'ge-ivGrade', 'ge-finalGrade', 'ge-ivSampling', 'ge-ivComments'].forEach(id => {
+          const el = document.getElementById(id);
+          if(el) { 
+              el.disabled = true; 
+              el.title = "Locked: Academic History"; 
+              el.style.backgroundColor = "#f8fafc"; 
+              el.style.cursor = "not-allowed"; 
+          }
+      });
+  } else {
+      // --- NORMAL ADVISER MODE ---
+      if (advBanner) advBanner.classList.add('hidden');
+      if (editBtn) editBtn.classList.remove('hidden');
+
+      // Wearing Assessor Hat: UNLOCK Assessor Fields
+      ['ge-lo1', 'ge-lo2', 'ge-lo3', 'ge-lo4', 'ge-assessor', 'ge-facultyRemarks'].forEach(id => {
+          const el = document.getElementById(id);
+          if(el) { el.disabled = false; el.title = ""; el.style.backgroundColor = ""; el.style.cursor = "default"; }
+      });
+      // Wearing Assessor Hat: LOCK IV Fields
+      ['ge-ivGrade', 'ge-finalGrade', 'ge-ivSampling', 'ge-ivComments'].forEach(id => {
+          const el = document.getElementById(id);
+          if(el) { el.disabled = true; el.title = "Locked: IV Access Only"; el.style.backgroundColor = "#f8fafc"; el.style.cursor = "not-allowed"; }
+      });
+  }
+}
+
+// -------------------------------------------------------------------
+// SECTION 3: IV ALLOCATIONS ENGINE
+// -------------------------------------------------------------------
+function loadIvAllocationsAYs() {
+  const select = document.getElementById('adv-iv-ay');
+  if (select.options.length <= 1) { 
+    select.innerHTML = '<option value="">Loading Academic Years...</option>';
+    google.script.run.withSuccessHandler(ays => {
+      let html = '<option value="">- Select Academic Year -</option>';
+      ays.forEach(ay => { html += `<option value="${ay.id}">${ay.year} ${ay.status === 'Active' ? '(Active)' : ''}</option>`; });
+      select.innerHTML = html;
+      const active = ays.find(a => a.status === 'Active');
+      if (active) { select.value = active.id; loadIvAllocations(); }
+    }).getAcademicYears(currentUser.token);
+  } else { loadIvAllocations(); }
+}
+
+// NEW STATE VARIABLES FOR IV FILTERING
+let advIvMasterData = [];
+let advIvFilteredData = [];
+
+function loadIvAllocations() {
+    const sheetId = document.getElementById('adv-iv-ay').value; 
+    const tbody = document.getElementById('adv-iv-body'); 
+
+    if(!sheetId) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--text-muted);'>Please select an Academic Year.</td></tr>";
+        advIvMasterData = []; advIvFilteredData = [];
+        return;
+    }
+
+    tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--primary); font-weight:600;'><span class='material-icons' style='vertical-align:middle; animation:spin 2s linear infinite; margin-right:5px;'>sync</span> Fetching IV allocations...</td></tr>";
+    
+    google.script.run
+      .withFailureHandler(err => { tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; color:red;'>System Error: ${err.message}</td></tr>`; })
+      .withSuccessHandler(res => {
+      if (res.error) { tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; color:red;'>${res.error}</td></tr>`; return; }
+      
+      pmMasterData = res; // Store all so Modal can grab it
+      
+      // 1. Store only this IV's data in our local memory
+      advIvMasterData = res.filter(r => (r.ivEmail || "").toLowerCase() === String(currentUser.email).toLowerCase());
+      advIvFilteredData = [...advIvMasterData];
+      
+      if (advIvMasterData.length === 0) { 
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:#64748b;'>No units assigned to you for Internal Verification.</td></tr>"; 
+        return; 
+      }
+
+      // 2. Populate the Unit Dropdown dynamically
+      populateAdvIvFilters();
+
+      // 3. Render the initial table
+      renderAdvIvTable();
+
+    }).getGradesForAY(currentUser.token, sheetId);
+}
+
+// Extract unique units and fill the dropdown
+function populateAdvIvFilters() {
+    const units = [...new Set(advIvMasterData.map(r => r.unit).filter(Boolean))].sort();
+    const unitSelect = document.getElementById('adv-iv-unit-filter');
+    unitSelect.innerHTML = '<option value="">All My IV Units</option>' + units.map(u => `<option value="${u}">${u}</option>`).join('');
+}
+
+// Run the filter logic whenever they type or change the dropdown
+function handleAdvIvSearch() {
+    const q = document.getElementById('adv-iv-search').value.toLowerCase();
+    const unitFilter = document.getElementById('adv-iv-unit-filter').value;
+
+    advIvFilteredData = advIvMasterData.filter(r => {
+        const matchesText = (r.studentName||"").toLowerCase().includes(q) || (r.studentId||"").toLowerCase().includes(q);
+        const matchesUnit = !unitFilter || r.unit === unitFilter;
+        return matchesText && matchesUnit;
+    });
+
+    renderAdvIvTable();
+}
+
+// Build the HTML rows
+function renderAdvIvTable() {
+    const tbody = document.getElementById('adv-iv-body');
+
+    if (advIvFilteredData.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--text-muted);'>No students match your filter.</td></tr>";
+        return;
+    }
+
+    tbody.innerHTML = advIvFilteredData.map(r => `
+          <tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <td style="font-size:12px; color:var(--text-muted);">${r.studentId}</td>
+            <td><strong>${r.studentName}</strong></td><td>${r.unit}</td><td>${r.term}</td>
+            <td><span class="grade-badge grade-${(r.ivGrade||'').charAt(0)}">${r.ivGrade || '-'}</span></td>
+            <td><button class="btn btn-outline" style="padding:4px 10px; font-size:12px; color:#059669; border-color:#a7f3d0;" onclick="openIvGradeModal(${r.rowIndex})"><span class="material-icons" style="font-size:14px; vertical-align:middle;">fact_check</span> Verify</button></td>
+          </tr>
+    `).join('');
+}
+
+function openIvGradeModal(rowIndex) {
+  openGradeViewModal(rowIndex); 
+  document.getElementById('g-sheetId').value = document.getElementById('adv-iv-ay').value;
+
+  // Wearing IV Hat: LOCK Assessor Fields
+  ['ge-lo1', 'ge-lo2', 'ge-lo3', 'ge-lo4', 'ge-assessor', 'ge-facultyRemarks'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) { el.disabled = true; el.title = "Locked: Assessor Access Only"; el.style.backgroundColor = "#f8fafc"; el.style.cursor = "not-allowed"; }
+  });
+  // Wearing IV Hat: UNLOCK IV Fields
+  ['ge-ivGrade', 'ge-finalGrade', 'ge-ivSampling', 'ge-ivComments'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) { el.disabled = false; el.title = ""; el.style.backgroundColor = ""; el.style.cursor = "default"; }
+  });
+}
+
+// -------------------------------------------------------------------
+// SECTION 4: MEETINGS MODULE
+// -------------------------------------------------------------------
+function loadAdvMeetings() {
+    const addBtn = document.querySelector('#adv-page-meetings .btn-header');
+    if (addBtn) { addBtn.disabled = true; addBtn.style.opacity = '0.5'; addBtn.style.cursor = 'wait'; }
+
+    const tbody = document.getElementById('adv-mtg-body');
+    tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--primary); font-weight:600;'><span class='material-icons' style='vertical-align:middle; animation:spin 2s linear infinite; margin-right:5px;'>sync</span> Fetching consultation logs...</td></tr>";
+    
+    google.script.run.withSuccessHandler(res => {
+      if (addBtn) { addBtn.disabled = false; addBtn.style.opacity = '1'; addBtn.style.cursor = 'pointer'; }
+      const myMtgs = res.filter(r => r.adviser === currentUser.name);
+      if(myMtgs.length === 0) { tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No meetings logged yet.</td></tr>"; return; }
+      tbody.innerHTML = myMtgs.map(m => `
+          <tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <td style="font-size:12px; color:var(--text-muted);">${m.date}</td>
+            <td><strong>${m.student}</strong></td><td>${m.unit}</td><td style="color:#ea580c; font-weight:bold;">${m.duration} hrs</td>
+            <td style="font-size:13px;">${m.topic}</td>
+            <td><span class="badge status-${(m.payrollStatus||'Pending').replace(/\s/g,'')}">${m.payrollStatus||'Pending'}</span></td>
+          </tr>
+      `).join('');
+    }).getAllMeetings(currentUser.token);
+}
+
+function openAdvMeetingModal() {
+  openAddMeetingModal(); 
+  let attempts = 0;
+  const interval = setInterval(() => {
+      const advSel = document.getElementById('am-adviser');
+      if (advSel && advSel.options.length > 1) { 
+        if (!Array.from(advSel.options).some(o => o.value === currentUser.name)) { advSel.add(new Option(currentUser.name, currentUser.name)); }
+        advSel.value = currentUser.name; advSel.style.pointerEvents = "none"; advSel.style.background = "#f8fafc";
+        clearInterval(interval);
+      }
+      if(attempts++ > 20) clearInterval(interval); 
+  }, 100);
+}
+
+// -------------------------------------------------------------------
+// SECTION 5: DEFERRALS MODULE
+// -------------------------------------------------------------------
+function loadAdviserDeferrals() {
+  const tbody = document.getElementById('adv-def-table-body');
+  tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding:20px; color:var(--primary); font-weight:600;'><span class='material-icons' style='vertical-align:middle; animation:spin 2s linear infinite; margin-right:5px;'>sync</span> Fetching student requests...</td></tr>";
+  
+  google.script.run
+    .withFailureHandler(err => {
+        tbody.innerHTML = `<tr><td colspan='7' style='text-align:center; padding:20px; color:red; font-weight:bold;'>Server Error: ${err.message}</td></tr>`;
+    })
+    .withSuccessHandler(res => {
+      advDeferralData = res;
+      if (res.length === 0) { 
+        tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding:20px; color:#64748b;'>No pending deferrals from your assigned students.</td></tr>"; 
+        return; 
+      }
+      tbody.innerHTML = res.map(d => {
+        let shortReason = d.reason ? (d.reason.length > 30 ? d.reason.substring(0,30) + '...' : d.reason) : '-';
+        return `<tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><td style="font-size:12px; color:var(--text-muted);">${d.dateReq}</td><td><strong>${d.name}</strong></td><td>${d.unit}</td><td style="color:#ea580c; font-weight:bold;">+${d.extDays}</td><td style="font-size:13px; color:#475569;">${shortReason}</td><td><span class="badge status-${(d.status||'Pending').replace(/\s/g,'')}">${d.status || 'Pending'}</span></td><td><button class="btn btn-outline" style="padding:4px 10px; font-size:12px; color:var(--primary); border-color:#fecdd3;" onclick="openAdvDeferralModal(${d.rowIndex})"><span class="material-icons" style="font-size:14px; vertical-align:middle;">rate_review</span> Review</button></td></tr>`;
+      }).join('');
+    }).getAdviserDeferrals(currentUser.token, currentUser.name, currentUser.email);
+}
+
+function openAdvDeferralModal(rowIndex) {
+  const d = advDeferralData.find(x => x.rowIndex === rowIndex); if (!d) return;
+  document.getElementById('adfd-rowIndex').value = d.rowIndex; document.getElementById('adfd-id').value = d.defId; document.getElementById('adfd-name').innerText = d.name; document.getElementById('adfd-unit').innerText = d.unit; document.getElementById('adfd-origDeadline').innerText = d.origDeadline; document.getElementById('adfd-reason').innerText = d.reason;
+  if (d.docLink) { document.getElementById('adfd-doc-link').href = d.docLink; document.getElementById('adfd-doc-container').classList.remove('hidden'); } else { document.getElementById('adfd-doc-container').classList.add('hidden'); }
+  document.getElementById('adfd-extDays').value = d.extDays; document.getElementById('adfd-status').value = d.status || 'Pending'; document.getElementById('adfd-remarks').value = d.remarks || '';
+  activeModalSnapshot = { 'adfd-extDays': String(d.extDays || ''), 'adfd-status': d.status || 'Pending', 'adfd-remarks': d.remarks || '' };
+  document.getElementById('advDeferralModal').style.display = 'block';
+}
+
+function saveAdviserDeferral() {
+  const btn = document.getElementById('adfd-save-btn');
+  const currentValues = { 'adfd-extDays': document.getElementById('adfd-extDays').value, 'adfd-status': document.getElementById('adfd-status').value, 'adfd-remarks': document.getElementById('adfd-remarks').value };
+  const updates = getDirtyFields(currentValues);
+  if (!updates) { alert("No changes were made."); document.getElementById('advDeferralModal').style.display = 'none'; return; }
+  btn.innerText = "Saving..."; btn.disabled = true;
+
+  const mappedUpdates = {};
+  if (updates['adfd-extDays'] !== undefined) mappedUpdates['def-extDays'] = updates['adfd-extDays'];
+  if (updates['adfd-remarks'] !== undefined) mappedUpdates['def-remarks'] = updates['adfd-remarks'];
+  if (updates['adfd-status'] !== undefined) { mappedUpdates['def-status'] = updates['adfd-status']; if (updates['adfd-status'] === 'Approved') { mappedUpdates['def-approvedDate'] = new Date().toISOString().split('T')[0]; } }
+
+  const payload = { rowIndex: document.getElementById('adfd-rowIndex').value, defId: document.getElementById('adfd-id').value, updates: mappedUpdates };
+  google.script.run.withFailureHandler(err => { btn.innerText = "Submit Decision"; btn.disabled = false; alert("System Error: " + err.message); }).withSuccessHandler(res => { btn.innerText = "Submit Decision"; btn.disabled = false; if (res.success) { alert("Decision submitted successfully!"); document.getElementById('advDeferralModal').style.display = 'none'; loadAdviserDeferrals(); } else { alert(res.message); } }).updateDeferralAdmin(currentUser.token, payload); 
+}
+
+// -------------------------------------------------------------------
+// SECTION 6: HELPDESK MODULE
+// -------------------------------------------------------------------
+function loadAdvHelpdesk() {
+  const submitBtn = document.getElementById('adv-t-submit');
+  const refreshBtn = document.querySelector('#adv-page-helpdesk button[onclick="loadAdvHelpdesk()"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.5'; submitBtn.style.cursor = 'wait'; }
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.style.opacity = '0.5'; refreshBtn.style.cursor = 'wait'; }
+
+  const tbody = document.getElementById('adv-ticket-history'); 
+  tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--primary); font-weight:600;'><span class='material-icons' style='vertical-align:middle; animation:spin 2s linear infinite; margin-right:5px;'>sync</span> Refreshing tickets...</td></tr>"; 
+  
+  google.script.run
+    .withFailureHandler(err => {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.style.cursor = 'pointer'; }
+        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.style.opacity = '1'; refreshBtn.style.cursor = 'pointer'; }
+        tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; color:red;'>System Error: ${err.message}</td></tr>`;
+    })
+    .withSuccessHandler(tickets => { 
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.style.cursor = 'pointer'; }
+      if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.style.opacity = '1'; refreshBtn.style.cursor = 'pointer'; }
+      
+      if (!tickets || tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No tickets found.</td></tr>'; return; } 
+      tbody.innerHTML = tickets.map(t => {
+        // Render Attachment Link
+        const attLink = t.attachment ? `<a href="${t.attachment}" target="_blank" style="color:var(--primary); font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:4px;"><span class="material-icons" style="font-size:14px;">attach_file</span> View</a>` : `<span style="color:#94a3b8; font-size:11px; font-style:italic;">None</span>`;
+        return `<tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><td style="font-weight:600; font-size:12px;">${t.ticketId}</td><td style="font-size:12px; color:var(--text-muted);">${t.date}</td><td>${t.summary}</td><td>${attLink}</td><td><span class="badge status-${t.status.replace(/\s/g,'')}">${t.status}</span></td><td style="font-size:12px;">${t.remarks || '-'}</td></tr>`;
+      }).join(''); 
+  }).getStudentTickets(currentUser.token, currentUser.name, currentUser.email);
+}
+
+function submitAdvTicket() {
+  const btn = document.getElementById('adv-t-submit'); 
+  const fileBox = document.getElementById('adv-t-file');
+  
+  const payload = { requesitioner: currentUser.name, email: currentUser.email, summary: document.getElementById('adv-t-summary').value, notes: document.getElementById('adv-t-notes').value, status: 'Open', editedBy: currentUser.name };
+  if (!payload.summary) { alert("Concern Summary is required."); return; }
+  
+  btn.innerText = 'Saving...'; btn.disabled = true;
+
+  const sendToServer = () => {
+    google.script.run.withFailureHandler(err => {
+      btn.innerText = 'Submit Ticket'; btn.disabled = false;
+      alert("Error: " + err.message);
+    }).withSuccessHandler(res => { 
+      btn.innerText = 'Submit Ticket'; btn.disabled = false; 
+      if (res.success) { 
+        alert("Ticket Submitted!"); 
+        document.getElementById('adv-t-summary').value=''; 
+        document.getElementById('adv-t-notes').value=''; 
+        if (fileBox) fileBox.value = '';
+        loadAdvHelpdesk(); 
+      } else { alert(res.message); } 
+    }).saveAllTicket(currentUser.token, payload);
+  };
+
+  if (fileBox && fileBox.files.length > 0) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      payload.fileData = e.target.result.split(',')[1];
+      payload.fileName = fileBox.files[0].name;
+      payload.mimeType = fileBox.files[0].type;
+      sendToServer();
+    };
+    reader.readAsDataURL(fileBox.files[0]);
+  } else { sendToServer(); }
+}
+
+// -------------------------------------------------------------------
+// SECTION 7: PAYROLL MONITORING ENGINE (V2)
+// -------------------------------------------------------------------
+
+// Tab Switcher Controller
+function switchPayTab(tabName) {
+  // 1. Hide all panels and remove active state from all buttons
+  ['advising', 'assessment', 'consultation'].forEach(name => {
+    document.getElementById(`pay-panel-${name}`).classList.remove('active');
+    document.getElementById(`tab-btn-${name}`).classList.remove('active');
+  });
+  
+  // 2. Show the clicked panel and highlight the button
+  document.getElementById(`pay-panel-${tabName}`).classList.add('active');
+  document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+}
+
+// Global State for Payroll Pagination & Filtering
+let advPayData = { advising: [], assessment: [], consultation: [] };
+let advPayPage = { advising: 1, assessment: 1, consultation: 1 };
+const PAY_ITEMS_PER_PAGE = 10; // Space-saving limit
+
+function loadAdvPayrollAYs() {
+  const select = document.getElementById('adv-pay-ay');
+  if (select.options.length <= 1) { 
+    select.innerHTML = '<option value="">Loading Academic Years...</option>';
+    google.script.run.withSuccessHandler(ays => {
+      let html = '<option value="">- Select Academic Year -</option>';
+      ays.forEach(ay => { html += `<option value="${ay.id}">${ay.year} ${ay.status === 'Active' ? '(Active)' : ''}</option>`; });
+      select.innerHTML = html;
+      const active = ays.find(a => a.status === 'Active');
+      if (active) { select.value = active.id; fetchAdvPayrollData(); }
+    }).getAcademicYears(currentUser.token);
+  } else { fetchAdvPayrollData(); }
+}
+
+function fetchAdvPayrollData() {
+  const ayId = document.getElementById('adv-pay-ay').value; if(!ayId) return;
+
+  // Set Loaders for all 3 tables
+  ['pay-adv-body', 'pay-ass-body', 'pay-con-body'].forEach(id => {
+    document.getElementById(id).innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px; color:var(--primary); font-weight:600;'><span class='material-icons' style='vertical-align:middle; animation:spin 2s linear infinite; margin-right:5px;'>sync</span> Fetching records...</td></tr>";
+  });
+
+  // Reset memory
+  advPayData = { advising: [], assessment: [], consultation: [] };
+  let callsCompleted = 0;
+  
+  // Triggers the UI renderer only when both databases finish loading
+  const checkComplete = () => { callsCompleted++; if(callsCompleted === 2) { resetPayPages(); renderAdvPayroll(); } };
+
+  // Call 1: Fetch Grades for Advising & Assessment
+  google.script.run.withSuccessHandler(res => {
+    if (!res.error) {
+      res.forEach(r => {
+        // Map to Advising Table
+        if (String(r.adviserName).trim().toLowerCase() === String(currentUser.name).trim().toLowerCase()) {
+           advPayData.advising.push(r);
+        }
+        // Map to Assessment Table (If Assessor or IV)
+        if (String(r.adviserName).trim().toLowerCase() === String(currentUser.name).trim().toLowerCase() ||
+            String(r.ivEmail).trim().toLowerCase() === String(currentUser.email).trim().toLowerCase()) {
+           advPayData.assessment.push(r);
+        }
+      });
+    }
+    checkComplete();
+  }).getGradesForAY(currentUser.token, ayId);
+
+  // Call 2: Fetch Hourly Consultations
+  google.script.run.withSuccessHandler(res => {
+    if (!res.error) {
+      advPayData.consultation = res.filter(m => String(m.adviser).trim().toLowerCase() === String(currentUser.name).trim().toLowerCase());
+    }
+    checkComplete();
+  }).getAllMeetings(currentUser.token);
+}
+
+// Resets pagination back to page 1 whenever the user types a new search or changes a filter
+function resetPayPages() {
+  advPayPage = { advising: 1, assessment: 1, consultation: 1 };
+}
+
+// Handles the Next/Prev buttons
+function changePayPage(type, direction) {
+  advPayPage[type] += direction;
+  renderAdvPayroll(); 
+}
+
+// Master UI Renderer
+function renderAdvPayroll() {
+  const filter = document.getElementById('adv-pay-filter').value.toLowerCase();
+  const search = document.getElementById('adv-pay-search').value.toLowerCase();
+
+  // Helper Function: Filters, Searches, and Paginates any dataset automatically
+  const processTable = (data, type, statusField, searchFields) => {
+    // 1. Filter & Search
+    let filtered = data.filter(item => {
+      const status = String(item[statusField] || 'Pending').toLowerCase();
+      const textToSearch = searchFields.map(f => String(item[f] || '')).join(' ').toLowerCase();
+      
+      const matchFilter = (filter === 'all' || status.includes(filter));
+      const matchSearch = (search === '' || textToSearch.includes(search));
+      return matchFilter && matchSearch;
+    });
+
+    // 2. Paginate
+    const totalPages = Math.ceil(filtered.length / PAY_ITEMS_PER_PAGE) || 1;
+    if (advPayPage[type] > totalPages) advPayPage[type] = totalPages;
+    if (advPayPage[type] < 1) advPayPage[type] = 1;
+    
+    const start = (advPayPage[type] - 1) * PAY_ITEMS_PER_PAGE;
+    const paged = filtered.slice(start, start + PAY_ITEMS_PER_PAGE);
+
+    return { paged, totalPages, total: filtered.length };
+  };
+
+  // Process the 3 databases
+  const advRes = processTable(advPayData.advising, 'advising', 'advPayrollStatus', ['studentName', 'unit']);
+  const assRes = processTable(advPayData.assessment, 'assessment', 'assPayrollStatus', ['studentName', 'unit']);
+  const conRes = processTable(advPayData.consultation, 'consultation', 'payrollStatus', ['student', 'topic', 'unit']);
+
+  // --- Render 1: Advising Payout ---
+  const tAdv = document.getElementById('pay-adv-body');
+  if (advRes.paged.length === 0) tAdv.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:15px; color:var(--text-muted);">No records found matching your criteria.</td></tr>`;
+  else tAdv.innerHTML = advRes.paged.map(r => `
+    <tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+      <td><strong>${escapeHTML(r.studentName)}</strong></td>
+      <td>${escapeHTML(r.unit)}</td>
+      <td>${escapeHTML(r.term || '-')}</td>
+      <td><span class="badge status-${(r.advPayrollStatus||'Pending').replace(/\s/g,'')}">${escapeHTML(r.advPayrollStatus || 'Pending')}</span></td>
+      <td style="font-size:12px; color:var(--text-muted);">${escapeHTML(r.advPayrollRemarks || '-')}</td>
+    </tr>`).join('');
+  document.getElementById('pay-adv-page-text').innerText = `Page ${advPayPage.advising} of ${advRes.totalPages} (${advRes.total} records)`;
+
+  // --- Render 2: Assessment Payout ---
+  const tAss = document.getElementById('pay-ass-body');
+  if (assRes.paged.length === 0) tAss.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:15px; color:var(--text-muted);">No records found matching your criteria.</td></tr>`;
+  else tAss.innerHTML = assRes.paged.map(r => {
+    let roleStr = (String(r.ivEmail).trim().toLowerCase() === String(currentUser.email).trim().toLowerCase()) ? 'IV' : 'Assessor';
+    return `
+    <tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+      <td><strong>${escapeHTML(r.studentName)}</strong></td>
+      <td>${escapeHTML(r.unit)} <span class="badge" style="background:#e2e8f0; color:#475569; font-size:10px; margin-left:5px;">${roleStr}</span></td>
+      <td>${escapeHTML(r.term || '-')}</td>
+      <td><span class="badge status-${(r.assPayrollStatus||'Pending').replace(/\s/g,'')}">${escapeHTML(r.assPayrollStatus || 'Pending')}</span></td>
+      <td style="font-size:12px; color:var(--text-muted);">${escapeHTML(r.assPayrollRemarks || '-')}</td>
+    </tr>`}).join('');
+  document.getElementById('pay-ass-page-text').innerText = `Page ${advPayPage.assessment} of ${assRes.totalPages} (${assRes.total} records)`;
+
+  // --- Render 3: Consultation Payout ---
+  const tCon = document.getElementById('pay-con-body');
+  if (conRes.paged.length === 0) tCon.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:15px; color:var(--text-muted);">No records found matching your criteria.</td></tr>`;
+  else tCon.innerHTML = conRes.paged.map(m => `
+    <tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+      <td style="font-size:12px; color:var(--text-muted);">${escapeHTML(m.date)}</td>
+      <td><strong>${escapeHTML(m.student)}</strong><br><span style="font-size:11px; color:#64748b;">${escapeHTML(m.topic)}</span></td>
+      <td style="color:#ea580c; font-weight:bold;">${escapeHTML(m.duration)} hrs</td>
+      <td><span class="badge status-${(m.payrollStatus||'Pending').replace(/\s/g,'')}">${escapeHTML(m.payrollStatus || 'Pending')}</span></td>
+      <td style="font-size:12px; color:var(--text-muted);">${escapeHTML(m.payrollRemarks || '-')}</td>
+    </tr>`).join('');
+  document.getElementById('pay-con-page-text').innerText = `Page ${advPayPage.consultation} of ${conRes.totalPages} (${conRes.total} records)`;
+}
+
+// ===============================================
+// ADVISER RISK MANAGEMENT ENGINE
+// ===============================================
+let advWarningData = []; let advWarningFiltered = []; let advWarningPage = 1;
+let advFlaggedData = []; let advFlaggedFiltered = []; let advFlaggedPage = 1;
+
+function loadAdvRiskMonitor() {
+  const wBody = document.getElementById('adv-warning-body');
+  wBody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px;'><span class='material-icons' style='animation:spin 2s linear infinite;'>sync</span></td></tr>";
+  
+  // Notice it calls the NEW Adviser-specific backend function!
+  google.script.run.withSuccessHandler(res => {
+    if(!res.success) { wBody.innerHTML = `<tr><td colspan='3'>Error: ${res.error}</td></tr>`; return; }
+    
+    advWarningData = res.warnings; advWarningFiltered = res.warnings; advWarningPage = 1;
+    advFlaggedData = res.flaggedCases; advFlaggedFiltered = res.flaggedCases; advFlaggedPage = 1;
+
+    // Run the filters immediately on load so the dropdowns are respected!
+    handleAdvWarningSearch();
+    handleAdvFlaggedSearch();
+  }).getAdviserRiskAssessmentReport(currentUser.token);
+}
+
+function renderAdvWarningTable() {
+  const tbody = document.getElementById('adv-warning-body');
+  document.getElementById('adv-warn-count').innerText = advWarningFiltered.length;
+  
+  const start = (advWarningPage - 1) * 10;
+  const pageItems = advWarningFiltered.slice(start, start + 10);
+
+  // Update "Select All" checkbox state
+  const allChecked = pageItems.length > 0 && pageItems.every(r => advSelectedWarnings.has(r.id));
+  const chkAll = document.getElementById('adv-chk-all-warn');
+  if (chkAll) chkAll.checked = allChecked;
+
+  if(pageItems.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px; color:#10b981; font-weight:bold;'>Excellent! None of your students have potential risks.</td></tr>";
+    document.getElementById('adv-warning-pagination').innerHTML = "";
+    return;
+  }
+
+  tbody.innerHTML = pageItems.map(r => {
+    const isChecked = advSelectedWarnings.has(r.id) ? 'checked' : '';
+    return `
+    <tr style="background:${isChecked ? '#fef3c7' : 'transparent'}; transition: 0.2s;">
+      <td style="text-align:center;">
+        <input type="checkbox" value="${r.id}" ${isChecked} onchange="toggleAdvWarnCheckbox('${r.id}')" style="cursor:pointer; transform:scale(1.2);">
+      </td>
+      <td><strong>${r.name}</strong><br><span style="font-size:11px; color:#64748b;">${r.id}</span></td>
+      <td style="font-size:12px; color:#b45309;">${r.factors.join(', ')}<br><span style="font-size:10px; color:#94a3b8;">${r.details}</span></td>
+    </tr>`;
+  }).join('');
+
+  buildPagination('adv-warning-pagination', advWarningFiltered.length, advWarningPage, 'changeAdvWarningPage');
+}
+
+// Keep track of which checkboxes the adviser clicked
+let advSelectedWarnings = new Set();
+
+function toggleAdvWarnCheckbox(id) {
+  if (advSelectedWarnings.has(id)) advSelectedWarnings.delete(id);
+  else advSelectedWarnings.add(id);
+  renderAdvWarningTable(); // Re-render to show the yellow highlight row
+}
+
+function toggleAdvAllWarnings(checkbox) {
+  const start = (advWarningPage - 1) * 10;
+  const pageItems = advWarningFiltered.slice(start, start + 10);
+  
+  if (checkbox.checked) {
+    pageItems.forEach(r => advSelectedWarnings.add(r.id));
+  } else {
+    pageItems.forEach(r => advSelectedWarnings.delete(r.id));
+  }
+  renderAdvWarningTable();
+}
+
+function renderAdvFlaggedTable() {
+  const tbody = document.getElementById('adv-flagged-body');
+  document.getElementById('adv-flagged-count').innerText = advFlaggedFiltered.length;
+  
+  const start = (advFlaggedPage - 1) * 10;
+  const pageItems = advFlaggedFiltered.slice(start, start + 10);
+
+  if(pageItems.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='2' style='text-align:center; padding:20px; color:var(--text-muted);'>No active cases for your students.</td></tr>";
+    document.getElementById('adv-flagged-pagination').innerHTML = "";
+    return;
+  }
+
+  tbody.innerHTML = pageItems.map(c => `
+    <tr style="transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+      <td><strong>${c.studentName}</strong><br><span style="font-size:11px; color:#64748b;">${c.dateFlagged}</span></td>
+      
+      <td style="font-size:11px; color:#dc2626; font-weight:600;">
+        ${c.factors}
+        <br><span style="font-size:10px; color:#64748b; font-weight:normal;">${c.details}</span>
+      </td>
+      
+      <td style="text-align:center;">
+        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; color:var(--primary); border-color:#bae6fd;" onclick="openAdvRiskModal('${c.recordId}')">
+          <span class="material-icons" style="font-size:14px; vertical-align:middle; margin-right:4px;">edit_note</span> Log
+        </button>
+      </td>
+
+    </tr>`).join('');
+
+  buildPagination('adv-flagged-pagination', advFlaggedFiltered.length, advFlaggedPage, 'changeAdvFlaggedPage');
+}
+
+function handleAdvWarningSearch() {
+  const q = document.getElementById('adv-warning-search').value.toLowerCase();
+  advWarningFiltered = advWarningData.filter(r => (r.name||"").toLowerCase().includes(q) || (r.id||"").toLowerCase().includes(q));
+  advWarningPage = 1; renderAdvWarningTable();
+}
+
+function handleAdvFlaggedSearch() {
+  const searchEl = document.getElementById('adv-flagged-search');
+  const statusEl = document.getElementById('adv-flagged-status');
+  
+  const q = searchEl ? searchEl.value.toLowerCase() : '';
+  const stat = statusEl ? statusEl.value : 'All'; // Default to All
+
+  // Filter by BOTH text search and status!
+  advFlaggedFiltered = advFlaggedData.filter(c => {
+     const matchText = (c.studentName||"").toLowerCase().includes(q) || (c.studentId||"").toLowerCase().includes(q);
+     const matchStat = (stat === 'All') || (c.status === stat); 
+     return matchText && matchStat;
+  });
+  
+  advFlaggedPage = 1; 
+  renderAdvFlaggedTable();
+}
+
+function changeAdvWarningPage(step) { advWarningPage += step; renderAdvWarningTable(); }
+function changeAdvFlaggedPage(step) { advFlaggedPage += step; renderAdvFlaggedTable(); }
+
+// -------------------------------------------------------------------
+// EXECUTE ACTION: FLAG OR DISMISS (CUSTOM UI)
+// -------------------------------------------------------------------
+function advBatchFlagStudents() { processAdvBatchRisk('Flagged'); }
+function advBatchDismissWarnings() { processAdvBatchRisk('Dismissed'); }
+
+function processAdvBatchRisk(actionName) {
+  if (advSelectedWarnings.size === 0) {
+    alert("Please select at least one student first."); // (We can build a custom toast for this later if you want!)
+    return;
+  }
+
+  // 1. Inject the text into our custom modal
+  document.getElementById('custom-confirm-message').innerHTML = `Are you sure you want to mark <strong>${advSelectedWarnings.size} student(s)</strong> as <strong>${actionName}</strong>?`;
+  
+  // 2. Show the modal
+  const modal = document.getElementById('custom-confirm-modal');
+  modal.style.display = 'flex';
+
+  // 3. Wait for them to click "Yes, Proceed"
+  document.getElementById('custom-confirm-btn').onclick = function() {
+    closeConfirmModal();            // Hide the UI
+    executeAdvBatchRisk(actionName); // Run the actual backend saving process
+  };
+}
+
+function closeConfirmModal() {
+  document.getElementById('custom-confirm-modal').style.display = 'none';
+}
+
+// -------------------------------------------------------------------
+// THE ACTUAL BACKEND SAVER
+// -------------------------------------------------------------------
+function executeAdvBatchRisk(actionName) {
+  const payloadItems = advWarningData.filter(r => advSelectedWarnings.has(r.id));
+  
+  document.body.style.cursor = 'wait'; // Show loading spinner cursor
+  
+  google.script.run
+    .withSuccessHandler(res => {
+      document.body.style.cursor = 'default';
+      if(!res.success) { alert("Error: " + res.message); return; }
+      
+      advSelectedWarnings.clear();
+      loadAdvRiskMonitor(); // Refresh the table
+    })
+    .withFailureHandler(err => {
+      document.body.style.cursor = 'default';
+      alert("System error. Please try again.");
+    })
+    .handleBatchRiskAction(currentUser.token, { action: actionName, items: payloadItems });
+}
+
+// ===============================================
+// ADVISER INTERVENTION LOGGING
+// ===============================================
+
+function openAdvRiskModal(recordId) {
+  // Find the case in our local data
+  const caseData = advFlaggedData.find(c => String(c.recordId) === String(recordId));
+  
+  if(!caseData) {
+    alert("Error: Could not find case data.");
+    return;
+  }
+  
+  // Populate the modal
+  document.getElementById('adv-ra-recordId').value = caseData.recordId;
+  document.getElementById('adv-ra-student').innerText = caseData.studentName;
+  document.getElementById('adv-ra-factors').innerText = caseData.factors;
+  
+  // ---> NEW: Inject the details into the modal <---
+  document.getElementById('adv-ra-details').innerText = caseData.details || "No additional details provided.";
+  
+  document.getElementById('adv-ra-status').value = caseData.status;
+  document.getElementById('adv-ra-history').innerText = caseData.logs || "No actions logged yet.";
+  document.getElementById('adv-ra-newLog').value = '';
+  
+  document.getElementById('advRiskActionModal').style.display = 'flex';
+}
+
+function saveAdvRiskAction() {
+  const btn = document.getElementById('adv-ra-submit-btn');
+  const payload = {
+    recordId: document.getElementById('adv-ra-recordId').value,
+    newLog: document.getElementById('adv-ra-newLog').value.trim(),
+    status: document.getElementById('adv-ra-status').value
+  };
+
+  if(!payload.newLog && payload.status === 'Flagged') {
+    alert("Please enter a note to log."); return;
+  }
+
+  btn.innerText = "Saving..."; 
+  btn.disabled = true;
+
+  google.script.run.withSuccessHandler(res => {
+    btn.innerText = "Save Log"; 
+    btn.disabled = false;
+    
+    if(res.success) {
+      document.getElementById('advRiskActionModal').style.display = 'none';
+      
+      // OPTIMISTIC UI: Change status to 'Resolved' instead of deleting!
+      if(payload.status === 'Resolved') {
+        const target = advFlaggedData.find(c => c.recordId === payload.recordId);
+        if (target) target.status = 'Resolved';
+        handleAdvFlaggedSearch(); // Instantly hides it from "Active Cases"
+      }
+      
+      google.script.run.withSuccessHandler(fresh => {
+        if(fresh.success) {
+           advWarningData = fresh.warnings;
+           advFlaggedData = fresh.flaggedCases;
+           handleAdvWarningSearch();
+           handleAdvFlaggedSearch();
+        }
+      }).getAdviserRiskAssessmentReport(currentUser.token);
+
+    } else {
+      alert(res.message);
+    }
+  }).updateRiskCase(currentUser.token, payload);
+}
+
+function changeAdvCalendarMonth(step) {
+  advCalendarDisplayMonth += step;
+  if (advCalendarDisplayMonth > 11) {
+    advCalendarDisplayMonth = 0;
+    advCalendarDisplayYear++;
+  } else if (advCalendarDisplayMonth < 0) {
+    advCalendarDisplayMonth = 11;
+    advCalendarDisplayYear--;
+  }
+  renderAdvCalendar();
+}
+
+function renderAdvCalendar() {
+  const container = document.getElementById('adv-calendar-widget');
+  if (!container) return;
+
+  const stats = advDashboardCache || {}; 
+  const daysInMonth = new Date(advCalendarDisplayYear, advCalendarDisplayMonth + 1, 0).getDate();
+  const firstDayIndex = new Date(advCalendarDisplayYear, advCalendarDisplayMonth, 1).getDay();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  let daysHeader = dayNames.map(day => `<div style="font-size:12px; font-weight:700; color:var(--text-muted); text-align:center; padding:5px 0;">${day}</div>`).join('');
+  
+  let daysGrid = '';
+  for (let i = 0; i < firstDayIndex; i++) { daysGrid += `<div></div>`; }
+  
+  const today = new Date();
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isToday = (day === today.getDate() && advCalendarDisplayMonth === today.getMonth() && advCalendarDisplayYear === today.getFullYear()) 
+      ? `background:var(--primary); color:white; border-radius:50%; font-weight:bold;` 
+      : `color:var(--text);`;
+    
+    const hasEvent = stats.events && stats.events.some(e => {
+      let eDate = new Date(e.date);
+      return eDate.getDate() === day && eDate.getMonth() === advCalendarDisplayMonth && eDate.getFullYear() === advCalendarDisplayYear;
+    });
+    const eventDot = hasEvent && !(day === today.getDate() && advCalendarDisplayMonth === today.getMonth() && advCalendarDisplayYear === today.getFullYear()) ? `<div style="width:4px; height:4px; background:#ef4444; border-radius:50%; margin:2px auto 0;"></div>` : '';
+    
+    daysGrid += `
+      <div style="text-align:center; padding:6px 0; font-size:13px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+         <span style="display:inline-block; width:28px; height:28px; line-height:28px; text-align:center; ${isToday}">${day}</span>
+         ${eventDot}
+      </div>`;
+  }
+
+  let eventsListHTML = '';
+  const events = stats.events || [];
+  
+  const monthEvents = events.filter(e => {
+      let eDate = new Date(e.date);
+      return eDate.getMonth() === advCalendarDisplayMonth && eDate.getFullYear() === advCalendarDisplayYear;
+  });
+  
+  if (monthEvents.length === 0) {
+    eventsListHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">No events scheduled for this month.</div>';
+  } else {
+    eventsListHTML = monthEvents.map(e => `
+      <div style="display:flex; gap:12px; align-items:center; padding:12px; background:#f8fafc; border-radius:8px; border:1px solid var(--border); margin-bottom:8px;">
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:white; border:1px solid #e2e8f0; border-radius:6px; min-width:48px; height:48px;">
+          <span style="font-size:10px; font-weight:700; color:#ef4444; text-transform:uppercase;">${new Date(e.date).toLocaleString('default', { month: 'short' })}</span>
+          <span style="font-size:16px; font-weight:800; color:var(--text); line-height:1;">${new Date(e.date).getDate()}</span>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1;">
+          <span style="font-size:14px; font-weight:700; color:var(--text);">${e.title}</span>
+          <span style="font-size:12px; color:var(--text-muted);"><span class="material-icons" style="font-size:12px; vertical-align:middle; margin-right:2px;">schedule</span> ${e.time || 'All Day'}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  container.innerHTML = `
+    <div style="background:white; border-radius:12px; border:1px solid var(--border); overflow:hidden;">
+      <div style="padding:15px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+        <button class="btn btn-outline" style="padding:4px; display:flex;" onclick="changeAdvCalendarMonth(-1)"><span class="material-icons" style="font-size:18px;">chevron_left</span></button>
+        <h4 style="margin:0; font-size:16px; font-weight:800; color:var(--text); width: 140px; text-align: center;">${monthNames[advCalendarDisplayMonth]} ${advCalendarDisplayYear}</h4>
+        <button class="btn btn-outline" style="padding:4px; display:flex;" onclick="changeAdvCalendarMonth(1)"><span class="material-icons" style="font-size:18px;">chevron_right</span></button>
+      </div>
+      <div style="padding:15px 20px;">
+        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; margin-bottom:10px;">${daysHeader}</div>
+        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px;">${daysGrid}</div>
+      </div>
+      <div style="padding:15px 20px; border-top:1px solid var(--border); background:#fff;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Events this Month</div>
+        </div>
+        ${eventsListHTML}
+      </div>
+    </div>
+  `;
+}
+
+</script>
