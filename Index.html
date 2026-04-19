@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <?!= include('CSS'); ?>
+  
+</head>
+
+<body>
+
+<?!= include('GlobalScripts'); ?>
+
+<div id="custom-alert-overlay" class="hidden">
+  <div class="custom-alert-box">
+    <div class="custom-alert-header">
+      <span class="material-icons" id="ca-icon">info</span>
+      <span id="ca-title">System Message</span>
+    </div>
+    <div class="custom-alert-body" id="ca-message">
+      Message goes here.
+    </div>
+    <div class="custom-alert-footer">
+      <button class="btn btn-outline" id="ca-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="ca-ok-btn" style="min-width: 80px;">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="global-loader" class="hidden">
+  <div class="global-spinner"></div>
+  <h2 id="loader-text" style="color: var(--primary); font-weight: 800; margin: 0; font-size: 20px;">Processing...</h2>
+  <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">Please wait, do not close this page.</p>
+</div>
+
+<div id="view-login">
+  <div class="login-box">
+    <h2 style="margin-top:0; color:var(--primary); font-weight: 800;">SISFU Flex Hub</h2>
+    <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px;">Please sign in to continue</p>
+    <input type="email" id="login-email" placeholder="Email Address" required>
+    <input type="password" id="login-pass" placeholder="Password" required>
+    <button id="login-btn" onclick="handleLogin()">
+      <span id="btn-text">Login</span>
+      <span id="btn-loader" class="hidden">Authenticating...</span>
+    </button>
+    <div style="margin-top:25px; padding-top:15px; border-top:1px solid #e2e8f0;">
+      <p style="font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:10px;">Demo Quick Access</p>
+      <div style="display:flex; gap:8px; justify-content:center;">
+        <button class="btn btn-outline" style="font-size:11px; padding:5px 10px;" onclick="handleDemoLogin('Student')">Student</button>
+        <button class="btn btn-outline" style="font-size:11px; padding:5px 10px;" onclick="handleDemoLogin('Adviser')">Adviser</button>
+        <button class="btn btn-outline" style="font-size:11px; padding:5px 10px;" onclick="handleDemoLogin('Admin')">Admin</button>
+      </div>
+    </div>
+  </div>
+</div> 
+<div id="force-password-modal" class="modal" style="display:none; align-items:center; justify-content:center; background:rgba(15,23,42,0.95); z-index:9999;">
+  <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+    <div style="background:#e0e7ff; color:#4f46e5; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 15px;">
+      <span class="material-icons" style="font-size:24px;">lock_reset</span>
+    </div>
+    <h3 style="margin-top:0; color:#1e293b; font-weight:800;">Welcome to the Hub!</h3>
+    <p style="color:#64748b; font-size:13px; margin-bottom:20px;">For your security, please set a new, personalized password before continuing.</p>
+
+    <div class="form-group" style="text-align:left;">
+      <label>New Password</label>
+      <input type="password" id="fp-pass-1" class="form-control" placeholder="Enter new password">
+    </div>
+    <div class="form-group" style="text-align:left; margin-bottom: 25px;">
+      <label>Confirm Password</label>
+      <input type="password" id="fp-pass-2" class="form-control" placeholder="Re-enter password">
+    </div>
+
+    <button class="btn btn-primary" id="fp-btn" style="width:100%;" onclick="submitNewPassword()">
+       Save & Continue
+    </button>
+  </div>
+</div>
+
+</div>
+
+<?!= include('Student'); ?>
+<?!= include('Adviser'); ?>
+<?!= include('Admin'); ?>
+
+<script>
+// ===================================================================
+// FILE: Index.html (THE ENTRY POINT)
+// DESCRIPTION: Handles session initialization, login requests, and 
+// routing the user to their designated dashboard based on their role.
+// ===================================================================
+
+let currentUser = {};
+
+// Global caching container for the Hub's dropdown lists
+window.akOptionsCache = null; 
+
+// -------------------------------------------------------------------
+// FUNCTION: window.onload
+// TRIGGER: When the browser finishes rendering the HTML.
+// PURPOSE: Checks if a session token is already saved in the browser's 
+//          LocalStorage so the user doesn't have to log in again.
+// -------------------------------------------------------------------
+window.onload = function() {
+  const session = localStorage.getItem('portalSession');
+  if (session) { 
+    currentUser = JSON.parse(session); 
+    // If they closed the browser without changing the password, force it again!
+    if (currentUser.requirePasswordChange) {
+      document.getElementById('view-login').classList.add('hidden');
+      document.getElementById('force-password-modal').style.display = 'flex';
+    } else {
+      routeUser(); 
+    }
+  }
+};
+
+// Hearbeat Ping: Protects the Database Connection
+let heartbeatInterval;
+
+function startHeartbeat() {
+  if (heartbeatInterval) clearInterval(heartbeatInterval);
+  heartbeatInterval = setInterval(() => {
+    if (currentUser && currentUser.token) {
+      google.script.run.pingSession(currentUser.token);
+    }
+  }, 900000); // Pings every 15 minutes
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: handleLogin
+// TRIGGER: Clicking the 'Login to Portal' button.
+// PURPOSE: Sends credentials to the server to securely hash and verify.
+// -------------------------------------------------------------------
+function handleLogin() {
+  const btnText = document.getElementById('btn-text'); 
+  const btnLoader = document.getElementById('btn-loader');
+  btnText.classList.add('hidden'); btnLoader.classList.remove('hidden');
+  
+  google.script.run.withSuccessHandler(res => {
+    btnText.classList.remove('hidden'); btnLoader.classList.add('hidden');
+    
+    if (res.success) { 
+      currentUser = res; 
+      localStorage.setItem('portalSession', JSON.stringify(res)); 
+      
+      // THE INTERCEPTOR: Stop them from seeing the dashboard if it's their first login
+      if (res.requirePasswordChange) {
+        document.getElementById('view-login').classList.add('hidden');
+        document.getElementById('force-password-modal').style.display = 'flex';
+      } else {
+        routeUser(); 
+      }
+    }
+    else { alert(res.message); }
+  }).attemptLogin(document.getElementById('login-email').value, document.getElementById('login-pass').value);
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: submitNewPassword
+// -------------------------------------------------------------------
+function submitNewPassword() {
+  const p1 = document.getElementById('fp-pass-1').value;
+  const p2 = document.getElementById('fp-pass-2').value;
+
+  if (p1.length < 6) return alert("Password must be at least 6 characters long.");
+  if (p1 !== p2) return alert("Passwords do not match.");
+
+  const btn = document.getElementById('fp-btn');
+  btn.innerText = "Saving..."; btn.disabled = true;
+  showLoader("Updating Security...");
+
+  google.script.run
+    .withFailureHandler(err => {
+       hideLoader();
+       btn.innerText = "Save & Continue"; btn.disabled = false;
+       alert("Fatal Error: " + err.message);
+    })
+    .withSuccessHandler(res => {
+       hideLoader();
+       if (res.success) {
+          // Remove the flag, save the updated session, and let them in!
+          currentUser.requirePasswordChange = false;
+          localStorage.setItem('portalSession', JSON.stringify(currentUser));
+          
+          document.getElementById('force-password-modal').style.display = 'none';
+          alert("Password updated successfully! Welcome to the Hub.");
+          routeUser();
+       } else {
+          btn.innerText = "Save & Continue"; btn.disabled = false;
+          alert(res.message);
+       }
+    }).changeMyPassword(currentUser.token, p1);
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: handleDemoLogin
+// TRIGGER: Clicking the Demo Quick Access buttons.
+// PURPOSE: Bypasses password entry strictly for presentation mode.
+// -------------------------------------------------------------------
+function handleDemoLogin(role) {
+  const btnText = document.getElementById('btn-text'); const btnLoader = document.getElementById('btn-loader');
+  btnText.classList.add('hidden'); btnLoader.classList.remove('hidden');
+  google.script.run.withSuccessHandler(res => {
+    if (res.success) { currentUser = res; localStorage.setItem('portalSession', JSON.stringify(res)); routeUser(); }
+    else { alert(res.message); btnText.classList.remove('hidden'); btnLoader.classList.add('hidden'); }
+  }).attemptDemoLogin(role);
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: logout
+// TRIGGER: Clicking "Logout" on any of the role sidebars.
+// PURPOSE: Destroys browser memory cache and resets the UI to the login screen.
+// -------------------------------------------------------------------
+function logout() {
+  // MODAL SWEEPER
+  document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
+  
+  // STOP HEARTBEAT
+  if (typeof heartbeatInterval !== 'undefined') clearInterval(heartbeatInterval);
+
+  localStorage.removeItem('portalSession'); 
+  localStorage.removeItem('lastStudentPage'); 
+  localStorage.removeItem('lastAdminPage');
+  localStorage.removeItem('lastAdviserPage');
+  currentUser = {}; 
+  
+  // Safely hide all dashboards without crashing
+  ['view-student', 'view-admin', 'view-adviser'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+  
+  // Safely restore the Login View
+  const loginView = document.getElementById('view-login');
+  if (loginView) loginView.classList.remove('hidden'); 
+  
+  const emailInput = document.getElementById('login-email');
+  if (emailInput) emailInput.value = ""; 
+  
+  const passInput = document.getElementById('login-pass');
+  if (passInput) passInput.value = "";
+  
+  const btnText = document.getElementById('btn-text');
+  if (btnText) btnText.classList.remove('hidden'); 
+  
+  const btnLoader = document.getElementById('btn-loader');
+  if (btnLoader) btnLoader.classList.add('hidden');
+}
+
+// ===================================================================
+// GLOBAL SECURITY: IDLE TIMEOUT ENGINE
+// ===================================================================
+let idleTimer;
+const IDLE_TIMEOUT_MINUTES = 15; // SET TO 0.1 FOR TESTING (6 seconds)
+const IDLE_TIMEOUT_MS = IDLE_TIMEOUT_MINUTES * 60 * 1000;
+
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  
+  // CHANGED: Now checks for currentUser.role so Demo buttons work!
+  if (currentUser && currentUser.role) {
+    idleTimer = setTimeout(() => {
+      alert("Session Expired: You have been logged out due to inactivity to protect your account.");
+      logout(); // Calls our new crash-proof logout function
+    }, IDLE_TIMEOUT_MS);
+  }
+}
+
+// Listen for ANY user activity across the entire webpage
+['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(eventName => {
+  document.addEventListener(eventName, resetIdleTimer, true);
+});
+
+
+// -------------------------------------------------------------------
+// FUNCTION: routeUser
+// TRIGGER: Called successfully upon login or auto-login.
+// PURPOSE: The SPA Router. Analyzes the user's role and unhides the 
+//          corresponding HTML container (Admin, Adviser, or Student).
+// -------------------------------------------------------------------
+function routeUser() {
+  document.getElementById('view-login').classList.add('hidden');
+  
+  const safeRole = currentUser.role || 'Student';
+  const safeName = currentUser.name || 'User';
+  
+  // =======================================================
+  // DYNAMIC DESKTOP FORCER & AUTO-SCALER (Fixes Mobile Clicks)
+  // =======================================================
+  if (safeRole === 'Admin' || safeRole === 'Adviser' || safeRole === 'Adviser/IV') {
+    // 1. Lock the layout width natively
+    document.body.style.width = '1200px';
+    document.body.style.margin = '0';
+    document.body.style.overflowX = 'hidden';
+    
+    // 2. THE MAGIC: Use modern CSS Transform instead of Zoom
+    const applyScale = () => {
+      if (window.innerWidth < 1200) {
+        const scaleRatio = window.innerWidth / 1200;
+        
+        // Scale the app and lock it to the top-left corner
+        document.body.style.transform = `scale(${scaleRatio})`;
+        document.body.style.transformOrigin = 'top left';
+        
+        // Inversely scale the height to eliminate the blank bottom space
+        const correctedHeight = (100 / scaleRatio) + 'vh';
+        document.body.style.height = correctedHeight;
+        
+        const adminView = document.getElementById('view-admin');
+        const adviserView = document.getElementById('view-adviser');
+        if (adminView) adminView.style.height = correctedHeight;
+        if (adviserView) adviserView.style.height = correctedHeight;
+        
+      } else {
+        // Reset if viewed on a large desktop monitor
+        document.body.style.transform = 'none';
+        document.body.style.width = '100%';
+        document.body.style.height = '100vh';
+        
+        const adminView = document.getElementById('view-admin');
+        const adviserView = document.getElementById('view-adviser');
+        if (adminView) adminView.style.height = '100vh';
+        if (adviserView) adviserView.style.height = '100vh';
+      }
+    };
+    
+    applyScale(); // Run immediately on login
+    window.addEventListener('resize', applyScale); // Recalculate on rotate
+
+  } else {
+    // Keep fluid responsive width for Students (Reset transforms)
+    document.body.style.transform = 'none';
+    document.body.style.width = '100%';
+    document.body.style.minWidth = '0';
+    document.body.style.height = '100vh';
+    document.body.style.overflowX = 'hidden';
+  }
+  // =======================================================
+
+  if (safeRole === 'Admin') {
+    document.getElementById('view-admin').classList.remove('hidden');
+    const adminNameEl = document.getElementById('admin-user-name');
+    if (adminNameEl) adminNameEl.innerText = safeName;
+    let lastPage = localStorage.getItem('lastAdminPage') || 'dashboard';
+    if (lastPage === 'profile') lastPage = 'manager';
+    const btn = document.querySelector(`#view-admin .nav-item[onclick*="'${lastPage}'"]`);
+    
+    // SAFETY NET ADDED HERE
+    if (typeof adminNav === 'function') adminNav(lastPage, btn);
+    
+  } else if (safeRole === 'Adviser' || safeRole === 'Adviser/IV') {
+    // Route to the Adviser Portal
+    document.getElementById('view-adviser').classList.remove('hidden');
+    const advNameEl = document.getElementById('adv-user-name');
+    if (advNameEl) advNameEl.innerText = safeName;
+
+    // Unlock the IV Tab if they have the special role!
+    const ivNavBtn = document.getElementById('nav-btn-iv');
+    if (ivNavBtn) {
+      if (safeRole === 'Adviser/IV') ivNavBtn.classList.remove('hidden');
+      else ivNavBtn.classList.add('hidden');
+    }
+
+    // MEMORY TRACKER: Retrieve the last visited page (Default to 'home' if first login)
+    let lastAdvPage = localStorage.getItem('lastAdviserPage') || 'home';
+    const btn = document.querySelector(`#view-adviser .nav-item[onclick*="'${lastAdvPage}'"]`);
+    
+    // Trigger the Navigation Engine!
+    if (typeof advNav === 'function') advNav(lastAdvPage, btn);
+    
+  } else {
+    // Route to the Student Portal
+    document.getElementById('view-student').classList.remove('hidden');
+    const firstName = safeName.split(' ')[0];
+    document.getElementById('welcome-msg').innerText = `Good day, ${firstName}! 👋`;
+    document.getElementById('stu-name-display').innerText = safeName;
+    document.getElementById('stu-avatar').innerText = firstName.charAt(0).toUpperCase();
+    
+    // SAFETY NET ADDED HERE
+    if (typeof nav === 'function') nav(localStorage.getItem('lastStudentPage') || 'home');
+  } 
+  
+  resetIdleTimer();
+  
+  // Apply Sidebar Memory Preference
+  const cleanRole = String(safeRole).toLowerCase().replace('/iv', '');
+  if (typeof applySidebarPreference === 'function') {
+    applySidebarPreference(cleanRole);
+  }
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: toggleSidebar
+// PURPOSE: Shrinks/Expands the sidebar for ANY role and saves preference
+// -------------------------------------------------------------------
+function toggleSidebar(role) {
+  const sidebar = document.getElementById(`sidebar-${role}`);
+  const mainContent = document.getElementById(`main-${role}`);
+  
+  if (sidebar && mainContent) {
+    sidebar.classList.toggle('collapsed');
+    mainContent.classList.toggle('expanded');
+    
+    // Switch the icon visually
+    const toggleBtn = sidebar.querySelector('.sidebar-toggle');
+    if (toggleBtn) {
+      toggleBtn.innerText = sidebar.classList.contains('collapsed') ? 'menu' : 'menu_open';
+    }
+    
+    // Save preference to browser memory
+    localStorage.setItem('hubSidebarState', sidebar.classList.contains('collapsed') ? 'closed' : 'open');
+  }
+}
+
+function applySidebarPreference(role) {
+  const savedState = localStorage.getItem('hubSidebarState');
+  if (savedState === 'closed') {
+    const sidebar = document.getElementById(`sidebar-${role}`);
+    const mainContent = document.getElementById(`main-${role}`);
+    
+    if (sidebar) sidebar.classList.add('collapsed');
+    if (mainContent) mainContent.classList.add('expanded');
+    
+    const toggleBtn = sidebar ? sidebar.querySelector('.sidebar-toggle') : null;
+    if (toggleBtn) toggleBtn.innerText = 'menu';
+  }
+}
+
+// Allow clicking the collapsed sidebar empty space to reopen it
+document.addEventListener('DOMContentLoaded', () => {
+  ['admin', 'adviser', 'student'].forEach(role => {
+    const sidebar = document.getElementById(`sidebar-${role}`);
+    if (sidebar) {
+      sidebar.addEventListener('click', (e) => {
+        // If it is collapsed, only expand if they DID NOT click a navigation link
+        if (sidebar.classList.contains('collapsed')) {
+          // Check if what they clicked was a menu button or the toggle itself
+          const clickedLink = e.target.closest('.nav-item, .stu-nav-link, .sidebar-toggle');
+          
+          // If they clicked empty space (not a link), expand the sidebar
+          if (!clickedLink) {
+            toggleSidebar(role);
+          }
+        }
+      });
+    }
+  });
+});
+
+</script>
+
+</body>
+</html>
