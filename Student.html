@@ -1,0 +1,501 @@
+<div id="view-student" class="hidden stu-layout">
+  <div class="stu-sidebar">
+    <div class="stu-logo"><span class="material-icons">school</span> SISFU Flex Hub</div>
+    <div class="stu-nav-link active" onclick="nav('home')" id="s-nav-home"><span class="material-icons">campaign</span> <span>News & Updates</span></div>
+    <div class="stu-nav-link mobile-only-nav" onclick="nav('widgets')" id="s-nav-widgets"><span class="material-icons">dashboard</span> <span>Overview</span></div>
+    <div class="stu-nav-link" onclick="nav('grades')" id="s-nav-grades"><span class="material-icons">auto_graph</span> <span>My Grades</span></div>
+    <div class="stu-nav-link" onclick="nav('ticketing')" id="s-nav-ticketing"><span class="material-icons">support_agent</span> <span>Helpdesk</span></div>
+    
+    <div class="stu-nav-link" onclick="nav('deferrals')" id="s-nav-deferrals"><span class="material-icons">event_repeat</span> <span>Deferrals</span></div>
+    
+    <div class="stu-nav-link logout" onclick="logout()"><span class="material-icons">logout</span> <span>Sign Out</span></div>
+  </div>
+
+  <div class="stu-main">
+    <div class="stu-top-bar">
+      <div class="user-profile">
+        <div class="avatar" id="stu-avatar"></div>
+        <span style="font-weight: 600; font-size: 14px;" id="stu-name-display"></span>
+      </div>
+    </div>
+
+  <div class="stu-dashboard-grid">
+    
+  <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
+
+  <div id="page-home">
+    <div style="margin-bottom: 5px;">
+        <h1 id="welcome-msg" style="font-size: 28px; font-weight: 800; margin:0; color: var(--text); letter-spacing:-0.5px;">Good morning! 👋</h1>
+        <p style="color: var(--text-muted); font-size: 15px; margin-top: 4px;">Here are your latest announcements and school updates.</p>
+      </div>
+      <div id="main-news-feed" style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
+        <div style="color:var(--text-muted); font-size:14px; padding: 20px;">Loading your feed...</div>
+      </div>
+    </div>
+
+    <div id="page-grades" class="hidden">
+        <h2 style="margin-top:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">Academic Record</h2>
+        <div id="grades-list" style="margin-top: 20px;">Loading...</div>
+    </div>
+
+    <div id="page-ticketing" class="hidden">
+      <h2 style="margin-top:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">Helpdesk & Support</h2>
+      <div style="max-width:800px; margin-top:20px;">
+        <div style="background:white; padding:30px; border-radius:16px; box-shadow:var(--shadow); border: 1px solid var(--border); margin-bottom:30px;">
+          <div class="form-group"><label>Summary of Concern <span style="color:red">*</span></label><input type="text" id="st-summary" placeholder="e.g. Cannot access my grades"></div>
+          <div class="form-group"><label>Details / Notes</label><textarea id="st-notes" rows="4"></textarea></div>
+          <div class="form-group">
+            <label>Attachment (Screenshot / Evidence)</label>
+            <input type="file" id="st-file" style="border:none; padding:0;">
+          </div>
+          <button class="btn btn-primary" style="width:100%; padding:14px; font-size:15px;" onclick="submitStudentTicket()" id="st-submit-btn">Submit Ticket</button>
+        </div>
+        <div style="background:white; padding:30px; border-radius:16px; box-shadow:var(--shadow); border: 1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+            <span class="material-icons" style="color:var(--text-muted);">history</span><h2 style="margin:0; font-size:18px;">My Ticket History</h2><div style="flex:1;"></div><button class="btn btn-outline" onclick="loadStudentTicketHistory()" style="padding:6px 12px; font-size:12px;">Refresh</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table"><thead><tr><th>ID</th><th>Date</th><th>Summary</th><th>Attachment</th><th>Status</th><th>Remarks</th></tr></thead><tbody id="student-ticket-history-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div id="page-deferrals" class="hidden">
+        <h2 style="margin-top:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">Deferral Requests</h2>
+        <div style="max-width:800px; margin-top:20px;">
+          
+          <div style="background:white; padding:30px; border-radius:16px; box-shadow:var(--shadow); border: 1px solid var(--border); margin-bottom:30px;">
+            <h3 style="margin-top:0; font-size:16px; margin-bottom:15px; color:var(--primary);">Submit a New Request</h3>
+            <input type="hidden" id="sd-akId">
+            <div class="row">
+              <div class="form-group col"><label>Unit to Defer <span style="color:red">*</span></label><select id="sd-unit"><option value="">Loading...</option></select></div>
+              <div class="form-group col"><label>Adviser <span style="color:red">*</span></label><select id="sd-adviser" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b;"><option value="">Auto-filled...</option></select></div>
+            </div>
+            <div class="row">
+              <div class="form-group col"><label>Original Deadline <span style="color:red">*</span></label><input type="date" id="sd-origDeadline" readonly style="background-color: #f1f5f9; cursor: not-allowed; color: #64748b; pointer-events: none;"></div>
+              <div class="form-group col"><label>Extension Days (1-21) <span style="color:red">*</span></label><input type="number" id="sd-extDays" min="1" max="21"></div>
+            </div>
+            <div class="form-group">
+              <label>Reason for Deferral <span style="color:red">*</span></label>
+              <textarea id="sd-reason" rows="3" placeholder="Provide a detailed reason for your request..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Supporting Document (Medical certificate, etc.)</label>
+              <input type="file" id="sd-file" style="border:none; padding:0;">
+            </div>
+            <button class="btn btn-primary" style="width:100%; padding:14px; font-size:15px;" onclick="submitStudentDeferral()" id="sd-submit-btn">Submit Deferral Request</button>
+          </div>
+          
+          <div style="background:white; padding:30px; border-radius:16px; box-shadow:var(--shadow); border: 1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+              <span class="material-icons" style="color:var(--text-muted);">history</span><h2 style="margin:0; font-size:18px;">My Request History</h2>
+              <div style="flex:1;"></div>
+              <button class="btn btn-outline" onclick="loadStudentDeferrals()" style="padding:6px 12px; font-size:12px;">Refresh</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead><tr><th>Date</th><th>Unit</th><th>Original Due</th><th>Ext.</th><th>Status</th><th>Remarks</th></tr></thead>
+                <tbody id="student-deferral-history"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      </div> <div id="page-widgets" class="sticky-column">
+        <div class="stu-card hero-widget">
+          <div class="decor-circle"></div>
+          <div class="stu-card-title"><span class="material-icons">military_tech</span> Progress</div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; position: relative; z-index: 2;">
+            <div><h2 id="dash-units" style="font-size: 32px; font-weight: 800; margin:0; line-height: 1;">...</h2><p style="font-size: 11px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 600;">Units Done</p></div>
+            <div style="text-align: right;"><h2 id="dash-credits" style="font-size: 22px; font-weight: 700; margin:0; line-height: 1;">...</h2><p style="font-size: 11px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 600;">Credits</p></div>
+          </div>
+          <div style="margin-top: 15px; background: rgba(0,0,0,0.25); height: 6px; border-radius: 10px; overflow: hidden; position: relative; z-index: 2;"><div style="width: 100%; height: 100%; background: #fda4af; border-radius: 10px; transform: scaleX(0); transform-origin: left; transition: transform 1s ease-out;" id="dash-progress-bar"></div></div>
+        </div>
+        
+        <div class="stu-card">
+          <div class="stu-card-title"><span class="material-icons">event</span> Upcoming Deadlines</div>
+          <div id="dash-deadlines-container" style="display: flex; flex-direction: column;">
+             <div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">Loading deadlines...</div>
+          </div>
+        </div>
+
+      </div> </div> </div> </div> 
+<script>
+
+// ===================================================================
+// SECTION 1: STUDENT PORTAL NAVIGATION & DASHBOARD
+// ===================================================================
+
+// -------------------------------------------------------------------
+// FUNCTION: nav
+// TRIGGER: Clicking any sidebar item in the Student portal.
+// PURPOSE: Hides all sections, unhides target section, and fires the 
+//          corresponding data load function for that view.
+// -------------------------------------------------------------------
+function nav(view) {
+  localStorage.setItem('lastStudentPage', view);
+  
+  // ADDED 'page-deferrals' to the array of pages to hide
+  ['page-home', 'page-grades', 'page-ticketing', 'page-deferrals', 'page-widgets'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.classList.add('hidden');
+  });
+  document.querySelectorAll('.stu-nav-link').forEach(link => link.classList.remove('active'));
+  
+  const targetPage = document.getElementById('page-' + view);
+  const targetNav = document.getElementById('s-nav-' + view);
+  
+  if (targetPage) targetPage.classList.remove('hidden');
+  if (targetNav) targetNav.classList.add('active');
+  
+  if (view === 'home') loadStudentDashboard();
+  if (view === 'grades') loadStudentGrades();
+  if (view === 'ticketing') loadStudentTicketHistory();
+  if (view === 'deferrals') loadStudentDeferrals(); // NEW TRIGGER
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: loadStudentDashboard
+// TRIGGER: Navigating to the Home tab.
+// PURPOSE: Fetches the targeted news feed, tallies academic progress, 
+//          and populates the upcoming deadlines widget.
+// -------------------------------------------------------------------
+function loadStudentDashboard() {
+  google.script.run.withSuccessHandler(res => {
+    const feed = document.getElementById('main-news-feed');
+    if (!res.news || res.news.length === 0) {
+        feed.innerHTML = '<div style="color:var(--text-muted); font-size:14px; padding:20px; text-align:center;">No new announcements. You are all caught up!</div>';
+      } else {
+        feed.innerHTML = res.news.map(n => {
+          const authorName = n.author || "Admin Office";
+          const initial = authorName.charAt(0).toUpperCase();
+          const audience = n.audience || "General";
+          
+          return `
+          <div class="news-card">
+            <div class="news-header">
+              <div class="news-avatar">${initial}</div>
+              <div class="news-meta">
+                <div class="news-author">${authorName}</div>
+                <div class="news-date">${n.date} • ${audience}</div>
+              </div>
+            </div>
+            <div class="news-content">
+              <h3 class="news-title">${n.title}</h3>
+              <div class="news-body">${n.content}</div>
+            </div>
+            ${n.attachment ? `
+            <a href="${n.attachment}" target="_blank" class="news-attachment">
+              <div class="att-icon"><span class="material-icons">description</span></div>
+              <div class="att-details">
+                <div class="att-name">Attached Document</div>
+                <div class="att-action">Click to view / download</div>
+              </div>
+            </a>` : ''}
+            <div class="news-footer">
+              <button class="btn btn-outline" style="font-size:12px; border:none; background:#f8fafc; color:#64748b;" onclick="this.innerHTML='<span class=\\'material-icons\\' style=\\'font-size:16px; color:var(--primary);\\'>thumb_up</span> Acknowledged'; this.style.color='var(--primary)'; this.style.background='var(--primary-light)';"><span class="material-icons" style="font-size:16px;">thumb_up_off_alt</span> Acknowledge</button>
+            </div>
+          </div>
+          `;
+        }).join('');
+      }
+  }).getDashboardData(currentUser.token);
+
+    // Fetch Grades for the Progress Widget
+    google.script.run.withSuccessHandler(res => {
+      if(!res.error) {
+        // 1. Update the Text Numbers
+        const completed = res.completedUnits || 0;
+        const credits = res.totalCredits || 0;
+        
+        document.getElementById('dash-units').innerText = completed; 
+        document.getElementById('dash-credits').innerText = credits;
+        
+        // 2. Update the Visual Progress Bar
+        const pbEl = document.getElementById('dash-progress-bar'); 
+        if (pbEl) { 
+          // Assuming a standard program requires 15 units for 100% completion
+          pbEl.style.transform = `scaleX(${Math.min(completed / 15, 1)})`; 
+        }
+      }
+    }).getMyGrades(currentUser.token, currentUser.id);
+
+    // Fetch Upcoming Deadlines
+    google.script.run.withSuccessHandler(res => {
+      const container = document.getElementById('dash-deadlines-container');
+      if (!res || res.error || res.length === 0) {
+        container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:15px 10px; background:#f8fafc; border-radius:8px;">No upcoming deadlines. You are all clear! 🎉</div>';
+        return;
+      }
+      
+      container.innerHTML = res.map((d, index) => {
+        const isLast = index === res.length - 1;
+        // Calculate exact days left
+        const daysLeft = Math.ceil((d.timestamp - new Date().getTime()) / (1000 * 3600 * 24));
+        const daysText = daysLeft === 0 ? "Today" : daysLeft === 1 ? "Tomorrow" : `${daysLeft} Days Left`;
+        
+        // Make it turn Red if the deadline is within 3 days, otherwise Orange
+        const daysColor = daysLeft <= 3 ? "#ef4444" : "#ea580c"; 
+        
+        return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom: ${isLast ? 'none' : '1px dashed #e2e8f0'};">
+          <div style="display:flex; flex-direction:column; flex:1; min-width:0; padding-right:10px;">
+            <span style="font-weight:700; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.unit}">${d.unit}</span>
+            <span style="font-size:11px; color:var(--text-muted); font-weight:600; margin-top:2px;">${d.type} Submission</span>
+          </div>
+          <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0;">
+            <span style="font-weight:800; font-size:13px; color:var(--primary);">${new Date(d.date).toLocaleDateString([], {month:'short', day:'numeric'})}</span>
+            <span style="font-size:10px; color:${daysColor}; font-weight:800; margin-top:2px; background:${daysColor}15; padding:3px 6px; border-radius:4px; letter-spacing:0.5px;">${daysText}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }).getStudentDeadlines(currentUser.token, currentUser.name);
+
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: loadStudentGrades
+// TRIGGER: Navigating to the 'My Grades' tab.
+// PURPOSE: Fetches the student's complete academic record across all years.
+// -------------------------------------------------------------------
+function loadStudentGrades() {
+  const container = document.getElementById('grades-list'); container.innerHTML = "Loading your academic records...";
+  google.script.run.withSuccessHandler(res => {
+    if (res.error) { container.innerHTML = `<div style="color:#ef4444; font-weight:bold; background:#fef2f2; padding:15px; border-radius:8px;">${res.error}</div>`; return; }
+    if (!res.records || res.records.length === 0) { container.innerHTML = "<div style='color:var(--text-muted); padding:20px; background:white; border-radius:12px;'>No records found in your tracker.</div>"; return; }
+    let html = '<div style="overflow-x:auto; background:white; border-radius:12px; box-shadow:var(--shadow);"><table class="data-table"><thead><tr><th>Unit</th><th>Level</th><th>Term</th><th>Credits</th><th>Grade</th><th>Remarks</th></tr></thead><tbody>';
+    res.records.forEach(r => { html += `<tr><td><strong>${r.unit}</strong></td><td>${r.level || '-'}</td><td>${r.term || '-'}</td><td>${r.credits || '-'}</td><td><span class="grade-badge grade-${(r.grade||'').charAt(0)}">${r.grade || '-'}</span></td><td style="font-size:12px; color:var(--text-muted);">${r.comments || '-'}</td></tr>`; });
+    html += '</tbody></table></div>'; container.innerHTML = html;
+  }).getMyGrades(currentUser.token, currentUser.id);
+}
+
+// ===================================================================
+// SECTION 2: STUDENT DEFERRALS ENGINE
+// ===================================================================
+
+// -------------------------------------------------------------------
+// FUNCTION: loadStudentDeferrals
+// TRIGGER: Navigating to the Deferrals tab or clicking Refresh.
+// PURPOSE: Fetches the student's historical extension requests.
+// -------------------------------------------------------------------
+function loadStudentDeferrals() {
+  const tbody = document.getElementById('student-deferral-history');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">Loading requests...</td></tr>';
+  
+  google.script.run.withSuccessHandler(deferrals => {
+    if (!deferrals || deferrals.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">No deferral requests found.</td></tr>'; return; }
+    tbody.innerHTML = deferrals.map(d => `<tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><td style="font-size:12px; color:#64748b;">${d.dateReq}</td><td><strong>${d.unit}</strong></td><td style="font-size:13px;">${new Date(d.origDeadline).toLocaleDateString()}</td><td style="color:#ea580c; font-weight:bold;">+${d.extDays}</td><td><span class="badge status-${d.status.replace(/\s/g,'')}">${d.status}</span></td><td style="font-size:12px; color:#64748b;">${d.remarks || '-'}</td></tr>`).join('');
+  }).getStudentDeferrals(currentUser.token, currentUser.name, currentUser.email);
+
+  // NEW: Trigger the Smart Dropdown fetch
+  loadSmartStudentDeferralUnits();
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: loadSmartStudentDeferralUnits
+// TRIGGER: Internally called by loadStudentDeferrals.
+// PURPOSE: Populates the dropdown form with ONLY units that are active
+//          and eligible for an extension (ignores 'Completed' units).
+// -------------------------------------------------------------------
+function loadSmartStudentDeferralUnits() {
+  const unitDropdown = document.getElementById('sd-unit');
+  unitDropdown.innerHTML = '<option value="">Loading eligible units...</option>';
+
+  google.script.run.withSuccessHandler(units => {
+     if (units.error) { alert(units.error); return; }
+     if (units.length === 0) {
+        unitDropdown.innerHTML = '<option value="">No eligible units found</option>';
+        return;
+     }
+
+     window.studentEligibleUnitsCache = units; 
+
+     let html = '<option value="">- Select Unit to Defer -</option>';
+     units.forEach(u => {
+        html += `<option value="${u.akId}">${u.unitName}</option>`;
+     });
+     unitDropdown.innerHTML = html;
+     
+  }).getEligibleDeferralUnits(currentUser.token, currentUser.name);
+}
+
+// -------------------------------------------------------------------
+// EVENT LISTENER: Unit Dropdown Change
+// PURPOSE: Auto-fills the Adviser and Original Deadline fields based on 
+//          the unit the student selects from the smart dropdown.
+// -------------------------------------------------------------------
+document.getElementById('sd-unit').addEventListener('change', function() {
+  const selectedAkId = this.value;
+  document.getElementById('sd-akId').value = selectedAkId; 
+  
+  const advDropdown = document.getElementById('sd-adviser');
+  const dateInput = document.getElementById('sd-origDeadline');
+  
+  if (!selectedAkId) {
+     advDropdown.innerHTML = '<option value="">- Select -</option>';
+     dateInput.value = '';
+     return;
+  }
+  
+  if (window.studentEligibleUnitsCache) {
+     const match = window.studentEligibleUnitsCache.find(u => u.akId === selectedAkId);
+     if (match) {
+        advDropdown.innerHTML = `<option value="${match.adviser}">${match.adviser}</option>`;
+        // Format the date properly for the input
+        if (match.finalDeadline) {
+          const d = new Date(match.finalDeadline);
+          dateInput.value = isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+        }
+     }
+  }
+});
+
+// -------------------------------------------------------------------
+// FUNCTION: submitStudentDeferral
+// TRIGGER: Clicking "Submit Deferral Request".
+// PURPOSE: Packages data, uploads any medical evidence to Drive, and 
+//          saves the request to the Deferral Engine.
+// -------------------------------------------------------------------
+function submitStudentDeferral() {
+  const unitDropdown = document.getElementById('sd-unit');
+  const unitText = unitDropdown.options[unitDropdown.selectedIndex]?.text || unitDropdown.value;
+  const akId = document.getElementById('sd-akId').value;
+  
+  const adviser = document.getElementById('sd-adviser').value; 
+  const origDeadline = document.getElementById('sd-origDeadline').value; 
+  const extDays = document.getElementById('sd-extDays').value; 
+  const reason = document.getElementById('sd-reason').value; 
+  const fileBox = document.getElementById('sd-file'); 
+  const btn = document.getElementById('sd-submit-btn');
+  
+  if (!unitText || !adviser || !origDeadline || !extDays || !reason) { alert("Please fill in all required fields."); return; }
+  if (extDays < 1 || extDays > 21) { alert("Extension days must be between 1 and 21."); return; }
+
+  btn.innerText = "Submitting..."; btn.disabled = true;
+  const rnd = "DEF-" + new Date().getFullYear() + "-" + Math.floor(Math.random()*9000+1000);
+  const today = new Date().toISOString().split('T')[0];
+
+  const payload = {
+    defId: rnd, dateReq: today, name: currentUser.name, email: currentUser.email, 
+    unit: unitText, akId: akId, adviser: adviser, origDeadline: origDeadline, extDays: extDays, reason: reason
+  };
+
+  const send = () => { google.script.run.withSuccessHandler(res => { btn.innerText = "Submit Deferral Request"; btn.disabled = false; if (res.success) { alert(res.message); ['sd-unit','sd-adviser','sd-origDeadline','sd-extDays','sd-reason','sd-file', 'sd-akId'].forEach(id => document.getElementById(id).value = ''); loadStudentDeferrals(); } else { alert(res.message); } }).createStudentDeferral(currentUser.token, payload); };
+  
+  if (fileBox.files.length > 0) { 
+    const reader = new FileReader(); 
+    reader.onload = function(e) { 
+      payload.fileData = e.target.result.split(',')[1]; 
+      payload.fileName = fileBox.files[0].name; 
+      payload.mimeType = fileBox.files[0].type; 
+      send(); 
+    }; 
+    reader.readAsDataURL(fileBox.files[0]); 
+  } else { 
+    send(); 
+  }
+}
+
+// ===================================================================
+// SECTION 3: HELPDESK SUPPORT
+// ===================================================================
+
+// -------------------------------------------------------------------
+// FUNCTION: loadStudentTicketHistory
+// TRIGGER: Navigating to the Helpdesk tab or clicking Refresh.
+// PURPOSE: Fetches the student's active and resolved support tickets.
+// -------------------------------------------------------------------
+function loadStudentTicketHistory() { 
+  const submitBtn = document.getElementById('st-submit-btn');
+  const refreshBtn = document.querySelector('#page-ticketing button[onclick="loadStudentTicketHistory()"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.5'; submitBtn.style.cursor = 'wait'; }
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.style.opacity = '0.5'; refreshBtn.style.cursor = 'wait'; }
+
+  const tbody = document.getElementById('student-ticket-history-body'); 
+  tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:20px; color:var(--primary); font-weight:600;'><span class='material-icons' style='vertical-align:middle; animation:spin 2s linear infinite; margin-right:5px;'>sync</span> Refreshing tickets...</td></tr>"; 
+  
+  google.script.run
+    .withFailureHandler(err => {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.style.cursor = 'pointer'; }
+      if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.style.opacity = '1'; refreshBtn.style.cursor = 'pointer'; }
+      tbody.innerHTML = `<tr><td colspan='6' style='text-align:center; color:red;'>System Error: ${err.message}</td></tr>`;
+    })
+    .withSuccessHandler(tickets => { 
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.style.cursor = 'pointer'; }
+      if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.style.opacity = '1'; refreshBtn.style.cursor = 'pointer'; }
+
+      if (!tickets || tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">No tickets found.</td></tr>'; return; } 
+      tbody.innerHTML = tickets.map(t => {
+        // Render Attachment Link
+        const attLink = t.attachment ? `<a href="${t.attachment}" target="_blank" style="color:var(--primary); font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:4px;"><span class="material-icons" style="font-size:14px;">attach_file</span> View</a>` : `<span style="color:#94a3b8; font-size:11px; font-style:italic;">None</span>`;
+        return `<tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><td style="font-weight:600; font-size:12px;">${t.ticketId}</td><td style="font-size:13px; color:#64748b;">${t.date}</td><td>${t.summary}</td><td>${attLink}</td><td><span class="badge status-${t.status.replace(/\s/g,'')}">${t.status}</span></td><td style="font-size:13px; color:#64748b;">${t.remarks || '-'}</td></tr>`;
+      }).join(''); 
+  }).getStudentTickets(currentUser.token, currentUser.name, currentUser.email); 
+}
+
+// -------------------------------------------------------------------
+// FUNCTION: submitStudentTicket
+// TRIGGER: Clicking "Submit Ticket" in the Helpdesk form.
+// PURPOSE: Packages concern data and files it in the Helpdesk DB.
+// -------------------------------------------------------------------
+function submitStudentTicket() { 
+  const btn = document.getElementById('st-submit-btn'); 
+  const fileBox = document.getElementById('st-file'); // <-- Grab the file input
+  
+  const payload = {
+    requesitioner: currentUser.name,
+    email: currentUser.email, 
+    summary: document.getElementById('st-summary').value,
+    notes: document.getElementById('st-notes').value,
+    status: 'Open',
+    editedBy: currentUser.name
+  };
+  
+  if (!payload.summary) { 
+    alert("Concern Summary is required."); 
+    return; 
+  }
+  
+  btn.innerText = 'Saving...'; 
+  btn.disabled = true;
+
+  // We wrap the server call in a mini-function so we can call it after reading the file (if one exists)
+  const sendToServer = () => {
+    google.script.run
+      .withFailureHandler(err => {
+        btn.innerText = 'Submit Ticket'; 
+        btn.disabled = false;
+        alert("System Error: " + err.message);
+      })
+      .withSuccessHandler(res => { 
+        btn.innerText = 'Submit Ticket'; 
+        btn.disabled = false; 
+        if (res.success) { 
+          document.getElementById('st-summary').value = '';
+          document.getElementById('st-notes').value = '';
+          if (fileBox) fileBox.value = ''; // <-- Clear the file input on success
+          alert("Ticket submitted successfully!");
+          loadStudentTicketHistory(); 
+        } else { 
+          alert(res.message); 
+        } 
+      }).saveAllTicket(currentUser.token, payload);
+  };
+
+  // THE ATTACHMENT ENGINE: Check if a file was uploaded and encode it
+  if (fileBox && fileBox.files.length > 0) { 
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      payload.fileData = e.target.result.split(',')[1]; 
+      payload.fileName = fileBox.files[0].name;
+      payload.mimeType = fileBox.files[0].type;
+      sendToServer(); 
+    };
+    reader.readAsDataURL(fileBox.files[0]);
+  } else {
+    sendToServer();
+  }
+}
+
+</script>
